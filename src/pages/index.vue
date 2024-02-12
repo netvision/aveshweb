@@ -7,12 +7,14 @@ import axios from 'axios'
 import { useAuthStore } from '~/stores/authStore'
 const authStore = useAuthStore()
 const member = ref({})
-const members = ref([])
+const electricians = ref([])
+const retailers = ref([])
 const newMemberModal = ref(false)
 const formRef = ref()
 const auth = getAuth()
 // console.log(auth.currentUser.email)
 const distributors = ref([])
+const distriOptions = ref([])
 const disabled = ref(true)
 const form = reactive({
   type: '',
@@ -109,10 +111,8 @@ const saveForm = async () => {
         city: form.city,
       })
     console.log(res.data)
-    if (res.status == '201')
-      members.value.push(res.data)
-
-    else alert('Couldnt add member')
+    if (res.status !== '201')
+      alert('Couldnt add member')
   }
   else { console.log('please check password') }
   resetForm()
@@ -126,17 +126,28 @@ const checkType = () => {
     form.distributor_id = null
   }
 }
+const getData = async (row, treeNode, resolve) => {
+  resolve (await axios.get(`https://avesh.netserve.in/members?filter[distributor_id][eq]=${row.id}`).then(r => r.data))
+}
+const handleClick = (row) => {
+  console.log(row.id)
+}
+
 onMounted(async () => {
-  const dis = await axios.get('https://avesh.netserve.in/members').then(res => res.data)
-  members.value = dis
-  dis.forEach((e) => {
-    if (e.type === 1) {
-      distributors.value.push({
-        value: e.id,
-        label: e.firm_title,
-      })
-    }
+  const dist = await axios.get('https://avesh.netserve.in/members?filter[type][eq]=1').then(res => res.data)
+  distributors.value = dist.map(d => ({
+    ...d,
+    children: [],
+    hasChildren: true,
+  }))
+  console.log(distributors.value)
+  distributors.value.forEach((e) => {
+    distriOptions.value.push({
+      value: e.id,
+      label: e.firm_title,
+    })
   })
+  electricians.value = await axios.get('https://avesh.netserve.in/members?filter[type][eq]=3').then(res => res.data)
   member.value = await authStore.member
 })
 </script>
@@ -183,7 +194,7 @@ onMounted(async () => {
               <el-select-v2
                 v-model="form.distributor_id"
                 class="m-2"
-                :options="distributors"
+                :options="distriOptions"
                 placeholder="Please select"
                 style="width: 240px"
                 :disabled="disabled"
@@ -255,7 +266,49 @@ onMounted(async () => {
       </div>
     </div>
     <div class="w-full">
-      <pre>{{ members }}</pre>
+      <h2 class="font-bold">
+        Distributors and Retailers
+      </h2>
+      <el-table
+        :data="distributors"
+        style="width:80%"
+        row-key="id"
+        :load="getData"
+        lazy
+        :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
+      >
+        <el-table-column prop="firm_title" label="Firm" />
+        <el-table-column prop="full_name" label="contact Person" />
+        <el-table-column prop="contact_no" label="Phone No." />
+        <el-table-column fixed="right" label="Operations" width="120">
+          <template #default="scope">
+            <el-button link type="primary" size="small" @click="handleClick(scope.row)">
+              Detail
+            </el-button>
+            <el-button link type="primary" size="small">
+              Edit
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <h2 class="font-bold">
+        Electricians
+      </h2>
+      <el-table :data="electricians" style="width:80%">
+        <el-table-column prop="firm_title" label="Firm" />
+        <el-table-column prop="full_name" label="contact Person" />
+        <el-table-column prop="contact_no" label="Phone No." />
+        <el-table-column fixed="right" label="Operations" width="120">
+          <template #default="scope">
+            <el-button link type="primary" size="small" @click="handleClick(scope.row)">
+              Detail
+            </el-button>
+            <el-button link type="primary" size="small">
+              Edit
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
     </div>
   </main>
   <main v-else-if="member?.type === 1" class="w-full">
