@@ -265,13 +265,14 @@ onMounted(async () => {
         </el-dialog>
       </div>
     </div>
-    <div class="w-full">
+    <div class="w-full p-10 mb-10">
       <h2 class="font-bold">
         Distributors and Retailers
       </h2>
       <el-table
+        border
         :data="distributors"
-        style="width:80%"
+        style="width:100%"
         row-key="id"
         :load="getData"
         lazy
@@ -283,28 +284,48 @@ onMounted(async () => {
         <el-table-column fixed="right" label="Operations" width="120">
           <template #default="scope">
             <el-button link type="primary" size="small" @click="handleClick(scope.row)">
-              Detail
+              <el-icon :size="15">
+                <CirclePlus />
+              </el-icon>
+            </el-button>
+            <el-button link type="primary" size="small" @click="handleClick(scope.row)">
+              <el-icon :size="15">
+                <Memo />
+              </el-icon>
             </el-button>
             <el-button link type="primary" size="small">
-              Edit
+              <el-icon :size="15">
+                <Edit />
+              </el-icon>
             </el-button>
           </template>
         </el-table-column>
       </el-table>
+    </div>
+    <div class="w-full p-10">
       <h2 class="font-bold">
         Electricians
       </h2>
-      <el-table :data="electricians" style="width:80%">
+      <el-table :data="electricians" style="width:100%" border>
         <el-table-column prop="firm_title" label="Firm" />
         <el-table-column prop="full_name" label="contact Person" />
         <el-table-column prop="contact_no" label="Phone No." />
         <el-table-column fixed="right" label="Operations" width="120">
           <template #default="scope">
             <el-button link type="primary" size="small" @click="handleClick(scope.row)">
-              Detail
+              <el-icon :size="15">
+                <CirclePlus />
+              </el-icon>
+            </el-button>
+            <el-button link type="primary" size="small" @click="handleClick(scope.row)">
+              <el-icon :size="15">
+                <Memo />
+              </el-icon>
             </el-button>
             <el-button link type="primary" size="small">
-              Edit
+              <el-icon :size="15">
+                <Edit />
+              </el-icon>
             </el-button>
           </template>
         </el-table-column>
