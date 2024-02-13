@@ -10,7 +10,13 @@ const member = ref({})
 const electricians = ref([])
 const retailers = ref([])
 const newMemberModal = ref(false)
+const editMemberModal = ref(false)
+const memberModal = ref(false)
+const pointsModal = ref(false)
+const userInfo = ref({})
 const formRef = ref()
+const editFormRef = ref()
+const edit = ref({})
 const auth = getAuth()
 // console.log(auth.currentUser.email)
 const distributors = ref([])
@@ -43,6 +49,29 @@ const resetForm = () => {
     city: '',
   }
   newMemberModal.value = false
+}
+const openEditModal = (member) => {
+  edit.value = member
+  editMemberModal.value = true
+}
+const closeEditModal = () => {
+  edit.value = {}
+  editMemberModal.value = false
+}
+
+const openMemberModal = (member) => {
+  memberModal.value = true
+  userInfo.value = member
+}
+
+const closeMemberModal = () => {
+  userInfo.value = {}
+  memberModal.value = false
+}
+
+const openPointsModal = (row) => {
+  userInfo.value = row
+  pointsModal.value = true
 }
 
 const validatePass = (rule, value, callback) => {
@@ -118,12 +147,21 @@ const saveForm = async () => {
   resetForm()
 }
 
-const checkType = () => {
-  console.log(form.type)
-  if (form.type == 2) { disabled.value = false }
+const editMember = async () => {
+  if (edit.value.id) {
+    const res = await axios.put(`https://avesh.netserve.in/members/${edit.value.id}`, edit.value)
+    console.log(res.status)
+    editMemberModal.value = false
+  }
+}
+
+const checkType = (type) => {
+  console.log(type)
+  if (type == 2) { disabled.value = false }
   else {
     disabled.value = true
-    form.distributor_id = null
+    form.distributor_id = 0
+    edit.value.distributor_id = 0
   }
 }
 const getData = async (row, treeNode, resolve) => {
@@ -178,7 +216,7 @@ onMounted(async () => {
               Member Type
             </el-divider>
             <el-form-item label="Category">
-              <el-radio-group v-model="form.type" class="ml-4" @change="checkType">
+              <el-radio-group v-model="form.type" class="ml-4" @change="checkType(form.type)">
                 <el-radio label="1">
                   Distributor
                 </el-radio>
@@ -278,22 +316,24 @@ onMounted(async () => {
         lazy
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
       >
-        <el-table-column prop="firm_title" label="Firm" />
+        <el-table-column prop="firm_title" label="Name of Firm" />
         <el-table-column prop="full_name" label="contact Person" />
         <el-table-column prop="contact_no" label="Phone No." />
+        <el-table-column prop="points_aggregate" label="Aggregate" />
+        <el-table-column prop="points_available" label="Available" />
         <el-table-column fixed="right" label="Operations" width="120">
           <template #default="scope">
-            <el-button link type="primary" size="small" @click="handleClick(scope.row)">
+            <el-button link type="primary" size="small" @click="openPointsModal(scope.row)">
               <el-icon :size="15">
                 <CirclePlus />
               </el-icon>
             </el-button>
-            <el-button link type="primary" size="small" @click="handleClick(scope.row)">
+            <el-button link type="primary" size="small" @click="openMemberModal(scope.row)">
               <el-icon :size="15">
                 <Memo />
               </el-icon>
             </el-button>
-            <el-button link type="primary" size="small">
+            <el-button link type="primary" size="small" @click="openEditModal(scope.row)">
               <el-icon :size="15">
                 <Edit />
               </el-icon>
@@ -307,22 +347,22 @@ onMounted(async () => {
         Electricians
       </h2>
       <el-table :data="electricians" style="width:100%" border>
-        <el-table-column prop="firm_title" label="Firm" />
+        <el-table-column prop="firm_title" label="Name of Firm" />
         <el-table-column prop="full_name" label="contact Person" />
         <el-table-column prop="contact_no" label="Phone No." />
         <el-table-column fixed="right" label="Operations" width="120">
           <template #default="scope">
-            <el-button link type="primary" size="small" @click="handleClick(scope.row)">
+            <el-button link type="primary" size="small" @click="openPointsModal(scope.row)">
               <el-icon :size="15">
                 <CirclePlus />
               </el-icon>
             </el-button>
-            <el-button link type="primary" size="small" @click="handleClick(scope.row)">
+            <el-button link type="primary" size="small" @click="openMemberModal(scope.row)">
               <el-icon :size="15">
                 <Memo />
               </el-icon>
             </el-button>
-            <el-button link type="primary" size="small">
+            <el-button link type="primary" size="small" @click="openEditModal(scope.row)">
               <el-icon :size="15">
                 <Edit />
               </el-icon>
@@ -331,6 +371,103 @@ onMounted(async () => {
         </el-table-column>
       </el-table>
     </div>
+
+    <el-dialog
+      v-model="editMemberModal"
+      title="Edit Member"
+      width="500"
+      align-center
+    >
+      <el-form ref="editFormRef" :model="edit" label-width="120px" status-icon label-position="top">
+        <el-divider content-position="left" class="mt-10">
+          Member Type
+        </el-divider>
+        <el-form-item label="Category">
+          <el-radio-group v-model="edit.type" class="ml-4" @change="checkType(edit.type)">
+            <el-radio label="1">
+              Distributor
+            </el-radio>
+            <el-radio label="2">
+              Retailer
+            </el-radio>
+            <el-radio label="3">
+              Electrician
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="Distributor" :disabled="disabled">
+          <el-select-v2
+            v-model="edit.distributor_id"
+            class="m-2"
+            :options="distriOptions"
+            placeholder="Please select"
+            style="width: 240px"
+            :disabled="disabled"
+          />
+        </el-form-item>
+        <el-divider content-position="left" class="mt-10">
+          Personal Details
+        </el-divider>
+        <el-row :gutter="20">
+          <el-col :span="15">
+            <el-form-item label="Full Name">
+              <el-input v-model="edit.full_name" type="text" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="9">
+            <el-form-item label="Aadhar Number">
+              <el-input v-model="edit.aadhar" type="number" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="15">
+            <el-form-item label="Name of the Firm">
+              <el-input v-model="edit.firm_title" type="text" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="9">
+            <el-form-item label="Contact No">
+              <el-input v-model="edit.contact_no" type="number" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="Full Address">
+          <el-input v-model="edit.address" type="text" />
+        </el-form-item>
+        <el-form-item label="City/Town">
+          <el-input v-model="edit.city" type="text" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="closeEditModal">
+            Cancel
+          </el-button>
+          <el-button type="primary" plain @click="editMember">
+            Confirm
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <el-dialog
+      v-model="memberModal"
+      title="Points Detail"
+      width="500"
+      align-center
+    >
+      <pre>{{ userInfo }}</pre>
+    </el-dialog>
+
+    <el-dialog
+      v-model="pointsModal"
+      title="Point Debit/Credit"
+      width="500"
+      align-center
+    >
+      <pre>{{ userInfo }}</pre>
+    </el-dialog>
   </main>
   <main v-else-if="member?.type === 1" class="w-full">
     <div class="flex items-center justify-between">
@@ -358,6 +495,17 @@ onMounted(async () => {
     </div>
   </main>
 </template>
+
+<style>
+.el-table__row--level-1{
+  font-style: italic;
+  color: blue;
+}
+.el-table__row--level-0{
+  font-weight: bold;
+  color: #000;
+}
+</style>
 
 <route lang="json">
   {
