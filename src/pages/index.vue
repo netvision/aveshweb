@@ -17,6 +17,8 @@ const userInfo = ref({})
 const formRef = ref()
 const editFormRef = ref()
 const edit = ref({})
+const points = ref({})
+const pointsFormRef = ref()
 const auth = getAuth()
 // console.log(auth.currentUser.email)
 const distributors = ref([])
@@ -72,6 +74,11 @@ const closeMemberModal = () => {
 const openPointsModal = (row) => {
   userInfo.value = row
   pointsModal.value = true
+}
+
+const closePointsModal = () => {
+  pointsModal.value = false
+  points.value = {}
 }
 
 const validatePass = (rule, value, callback) => {
@@ -167,8 +174,28 @@ const checkType = (type) => {
 const getData = async (row, treeNode, resolve) => {
   resolve (await axios.get(`https://avesh.netserve.in/members?filter[distributor_id][eq]=${row.id}`).then(r => r.data))
 }
-const handleClick = (row) => {
-  console.log(row.id)
+
+const savePoints = async () => {
+  if (points.value.type === 'c') {
+    if (userInfo.value.distributor_id !== 0) {
+      const dist = distributors.value.filter(d => d.id === userInfo.value.distributor_id)[0]
+      const d_data = { points_available: dist.points_available - Number(points.value.point) }
+      await axios.patch(`https://avesh.netserve.in/members/${dist.id}`, d_data)
+    }
+
+    // console.log(userInfo.value.points_available + Number(points.value.point))
+    const data = { points_available: userInfo.value.points_available + Number(points.value.point), points_aggregate: userInfo.value.points_aggregate + Number(points.value.point) }
+    const res = await axios.patch(`https://avesh.netserve.in/members/${userInfo.value.id}`, data)
+    if (res.data) {
+      points.value.member_id = userInfo.value.id
+      await axios.post('https://avesh.netserve.in/points', points.value)
+    }
+    else {
+      alert (res.status)
+    }
+  }
+  console.log(points.value)
+  pointsModal.value = false
 }
 
 onMounted(async () => {
@@ -178,7 +205,7 @@ onMounted(async () => {
     children: [],
     hasChildren: true,
   }))
-  console.log(distributors.value)
+  // console.log(distributors.value)
   distributors.value.forEach((e) => {
     distriOptions.value.push({
       value: e.id,
@@ -187,6 +214,7 @@ onMounted(async () => {
   })
   electricians.value = await axios.get('https://avesh.netserve.in/members?filter[type][eq]=3').then(res => res.data)
   member.value = await authStore.member
+  console.log(Number('40'))
 })
 </script>
 
@@ -350,6 +378,8 @@ onMounted(async () => {
         <el-table-column prop="firm_title" label="Name of Firm" />
         <el-table-column prop="full_name" label="contact Person" />
         <el-table-column prop="contact_no" label="Phone No." />
+        <el-table-column prop="points_aggregate" label="Aggregate" />
+        <el-table-column prop="points_available" label="Available" />
         <el-table-column fixed="right" label="Operations" width="120">
           <template #default="scope">
             <el-button link type="primary" size="small" @click="openPointsModal(scope.row)">
@@ -453,20 +483,90 @@ onMounted(async () => {
 
     <el-dialog
       v-model="memberModal"
-      title="Points Detail"
+      :title="userInfo.firm_title"
       width="500"
       align-center
     >
-      <pre>{{ userInfo }}</pre>
+      <h2 class="font-bold">
+        Points History
+      </h2>
     </el-dialog>
 
     <el-dialog
       v-model="pointsModal"
-      title="Point Debit/Credit"
+      :title="userInfo.firm_title"
       width="500"
       align-center
     >
-      <pre>{{ userInfo }}</pre>
+      <el-divider />
+      <h2 class="font-bold">
+        Points debit/Credit Form
+      </h2>
+      <el-divider />
+      <el-form ref="pointsFormRef" :model="points" label-width="120px" status-icon label-position="top">
+        <el-form-item label="">
+          <el-radio-group v-model="points.type" class="ml-4">
+            <el-radio label="c">
+              Credit
+            </el-radio>
+            <el-radio label="d">
+              Debit
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="Date">
+              <el-date-picker
+                v-model="points.date"
+                type="date"
+                placeholder="select date"
+                value-format="YYYY-MM-DD"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="Points">
+              <el-input v-model="points.point" type="number" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row v-if="points.type === 'c'" :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="Invoice Date">
+              <el-date-picker
+                v-model="points.invoice_date"
+                type="date"
+                placeholder="select date"
+                value-format="YYYY-MM-DD"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="Invoice No">
+              <el-input v-model="points.invoice_no" type="number" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="Invoice Amount">
+              <el-input v-model="points.invoice_amount" type="number" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="Description">
+          <el-input v-model="points.other_info" type="text" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="closePointsModal">
+            Cancel
+          </el-button>
+          <el-button type="primary" plain @click="savePoints">
+            Confirm
+          </el-button>
+        </div>
+      </template>
     </el-dialog>
   </main>
   <main v-else-if="member?.type === 1" class="w-full">
