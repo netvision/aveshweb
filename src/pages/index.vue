@@ -18,6 +18,7 @@ const formRef = ref()
 const editFormRef = ref()
 const edit = ref({})
 const points = ref({})
+const pointsLog = ref([])
 const pointsFormRef = ref()
 const auth = getAuth()
 // console.log(auth.currentUser.email)
@@ -61,9 +62,11 @@ const closeEditModal = () => {
   editMemberModal.value = false
 }
 
-const openMemberModal = (member) => {
+const openMemberModal = async (member) => {
+  pointsLog.value = []
   memberModal.value = true
   userInfo.value = member
+  pointsLog.value = await axios.get(`https://avesh.netserve.in/points?filter[member_id][eq]=${userInfo.value.id}`).then(r => r.data)
 }
 
 const closeMemberModal = () => {
@@ -147,8 +150,6 @@ const saveForm = async () => {
         city: form.city,
       })
     console.log(res.data)
-    if (res.status !== '201')
-      alert('Couldnt add member')
   }
   else { console.log('please check password') }
   resetForm()
@@ -176,6 +177,28 @@ const getData = async (row, treeNode, resolve) => {
 }
 
 const savePoints = async () => {
+  if (userInfo.value.distributor_id !== 0) {
+    if (points.value.type === 'c') {
+      const dist = distributors.value.filter(d => d.id === userInfo.value.distributor_id)[0]
+      const d_data = { points_available: dist.points_available - Number(points.value.point) }
+      const r_data = { points_available: userInfo.value.points_available + Number(points.value.point) }
+      await axios.patch(`https://avesh.netserve.in/members/${dist.id}`, d_data)
+      await axios.patch(`https://avesh.netserve.in/members/${userInfo.value.id}`, r_data)
+    }
+    else if (points.value.type === 'd') {
+      const r_data = { points_available: userInfo.value.points_available - Number(points.value.point) }
+      await axios.patch(`https://avesh.netserve.in/members/${userInfo.value.id}`, r_data)
+    }
+  }
+  else {
+    const d_data = (points.value.type === 'c') ? { points_aggregate: userInfo.value.points_aggregate + Number(points.value.point), points_available: userInfo.value.points_available + Number(points.value.point) } : { points_aggregate: userInfo.value.points_aggregate - Number(points.value.point) }
+    await axios.patch(`https://avesh.netserve.in/members/${userInfo.value.id}`, d_data)
+  }
+
+  points.value.member_id = userInfo.value.id
+  await axios.post('https://avesh.netserve.in/points', points.value)
+  pointsModal.value = false
+  /*
   if (points.value.type === 'c') {
     if (userInfo.value.distributor_id !== 0) {
       const dist = distributors.value.filter(d => d.id === userInfo.value.distributor_id)[0]
@@ -194,8 +217,20 @@ const savePoints = async () => {
       alert (res.status)
     }
   }
+  else if (points.value.type === 'd') {
+    const data = { points_available: userInfo.value.points_available - Number(points.value.point), points_aggregate: userInfo.value.points_aggregate + Number(points.value.point) }
+    const res = await axios.patch(`https://avesh.netserve.in/members/${userInfo.value.id}`, data)
+    if (res.data) {
+      points.value.member_id = userInfo.value.id
+      await axios.post('https://avesh.netserve.in/points', points.value)
+    }
+    else {
+      alert (res.status)
+    }
+  }
   console.log(points.value)
   pointsModal.value = false
+  */
 }
 
 onMounted(async () => {
@@ -379,7 +414,6 @@ onMounted(async () => {
         <el-table-column prop="full_name" label="contact Person" />
         <el-table-column prop="contact_no" label="Phone No." />
         <el-table-column prop="points_aggregate" label="Aggregate" />
-        <el-table-column prop="points_available" label="Available" />
         <el-table-column fixed="right" label="Operations" width="120">
           <template #default="scope">
             <el-button link type="primary" size="small" @click="openPointsModal(scope.row)">
@@ -490,6 +524,7 @@ onMounted(async () => {
       <h2 class="font-bold">
         Points History
       </h2>
+      <pre>{{ pointsLog }}</pre>
     </el-dialog>
 
     <el-dialog
