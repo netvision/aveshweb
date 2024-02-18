@@ -6,31 +6,23 @@ import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth'
 import axios from 'axios'
 import { useAuthStore } from '~/stores/authStore'
 const authStore = useAuthStore()
-const member = ref({})
+const auth = getAuth()
 const electricians = ref([])
 const retailers = ref([])
-const newMemberModal = ref(false)
-const editMemberModal = ref(false)
-const memberModal = ref(false)
-const pointsModal = ref(false)
-const userInfo = ref({})
-const formRef = ref()
-const editFormRef = ref()
-const edit = ref({})
-const points = ref({})
-const pointsLog = ref([])
-const pointsFormRef = ref()
-const auth = getAuth()
-// console.log(auth.currentUser.email)
 const distributors = ref([])
 const distriOptions = ref([])
+const newMemberModal = ref(false)
 const disabled = ref(true)
+const isDisabled = ref(false)
+const formRef = ref()
+
 const form = reactive({
   type: '',
   email: '',
   password: '',
   con_password: '',
   full_name: '',
+  dob: '',
   aadhar: '',
   firm_title: '',
   contact_no: '',
@@ -45,6 +37,7 @@ const resetForm = () => {
     password: '',
     con_password: '',
     full_name: '',
+    dob: '',
     aadhar: '',
     firm_title: '',
     contact_no: '',
@@ -53,37 +46,6 @@ const resetForm = () => {
   }
   newMemberModal.value = false
 }
-const openEditModal = (member) => {
-  edit.value = member
-  editMemberModal.value = true
-}
-const closeEditModal = () => {
-  edit.value = {}
-  editMemberModal.value = false
-}
-
-const openMemberModal = async (member) => {
-  pointsLog.value = []
-  memberModal.value = true
-  userInfo.value = member
-  pointsLog.value = await axios.get(`https://avesh.netserve.in/points?filter[member_id][eq]=${userInfo.value.id}`).then(r => r.data)
-}
-
-const closeMemberModal = () => {
-  userInfo.value = {}
-  memberModal.value = false
-}
-
-const openPointsModal = (row) => {
-  userInfo.value = row
-  pointsModal.value = true
-}
-
-const closePointsModal = () => {
-  pointsModal.value = false
-  points.value = {}
-}
-
 const validatePass = (rule, value, callback) => {
   if (value === '') {
     callback(new Error('Please input the password'))
@@ -122,47 +84,67 @@ const rules = reactive({
   email: [{ validator: checkEmail, trigger: 'blur' }],
 })
 
-const createUser = async (email, password) => {
-  try {
-    const auth = getAuth()
-    await createUserWithEmailAndPassword(auth, email, password)
-    // User created successfully
-    // Do not automatically sign in the user here
-  }
-  catch (err) {
-    alert(err.message)
-  }
-}
-
 const saveForm = async () => {
+  isDisabled.value = true
   if (form.password === form.con_password) {
-    await createUser(form.email, form.password)
-    const res = await axios.post('https://avesh.netserve.in/members',
-      {
-        type: form.type,
-        distributor_id: form.distributor_id ?? 0,
-        full_name: form.full_name,
-        email: form.email,
-        contact_no: form.contact_no,
-        firm_title: form.firm_title,
-        aadhar: form.aadhar,
-        full_address: form.address,
-        city: form.city,
+    const auth = getAuth()
+    createUserWithEmailAndPassword(auth, form.email, form.password)
+      .then((credentials) => {
+        const user = credentials.user
+        if (user) {
+          axios.post('https://avesh.netserve.in/members',
+            {
+              type: form.type,
+              distributor_id: form.distributor_id ?? 0,
+              full_name: form.full_name,
+              dob: form.dob,
+              email: form.email,
+              contact_no: form.contact_no,
+              firm_title: form.firm_title,
+              aadhar: form.aadhar,
+              full_address: form.address,
+              city: form.city,
+            })
+            .then((res) => {
+              if (res.status === 201) {
+                alert('user member created successfully! please login once again')
+                authStore.signout()
+              }
+            })
+            .catch((error) => {
+              console.log(error.message)
+            })
+        }
       })
-    console.log(res.data)
+      .catch((error) => {
+        console.log(error.message)
+      })
   }
   else { console.log('please check password') }
   resetForm()
 }
 
+const userInfo = ref({})
+const editMemberModal = ref(false)
+const editFormRef = ref()
+const edit = ref({})
+const openEditModal = (member) => {
+  edit.value = member
+  editMemberModal.value = true
+}
+const closeEditModal = () => {
+  edit.value = {}
+  editMemberModal.value = false
+}
 const editMember = async () => {
+  isDisabled.value = true
   if (edit.value.id) {
     const res = await axios.put(`https://avesh.netserve.in/members/${edit.value.id}`, edit.value)
     console.log(res.status)
     editMemberModal.value = false
+    location.reload()
   }
 }
-
 const checkType = (type) => {
   console.log(type)
   if (type == 2) { disabled.value = false }
@@ -172,11 +154,34 @@ const checkType = (type) => {
     edit.value.distributor_id = 0
   }
 }
-const getData = async (row, treeNode, resolve) => {
-  resolve (await axios.get(`https://avesh.netserve.in/members?filter[distributor_id][eq]=${row.id}`).then(r => r.data))
+
+const pointsLog = ref([])
+const memberModal = ref(false)
+const member = ref({})
+const openMemberModal = async (member) => {
+  pointsLog.value = []
+  memberModal.value = true
+  userInfo.value = member
+  pointsLog.value = await axios.get(`https://avesh.netserve.in/points?filter[member_id][eq]=${userInfo.value.id}`).then(r => r.data)
+}
+const closeMemberModal = () => {
+  userInfo.value = {}
+  memberModal.value = false
 }
 
+const pointsModal = ref(false)
+const points = ref({})
+const pointsFormRef = ref()
+const openPointsModal = (row) => {
+  userInfo.value = row
+  pointsModal.value = true
+}
+const closePointsModal = () => {
+  pointsModal.value = false
+  points.value = {}
+}
 const savePoints = async () => {
+  isDisabled.value = true
   if (userInfo.value.distributor_id !== 0) {
     if (points.value.type === 'c') {
       const dist = distributors.value.filter(d => d.id === userInfo.value.distributor_id)[0]
@@ -198,39 +203,11 @@ const savePoints = async () => {
   points.value.member_id = userInfo.value.id
   await axios.post('https://avesh.netserve.in/points', points.value)
   pointsModal.value = false
-  /*
-  if (points.value.type === 'c') {
-    if (userInfo.value.distributor_id !== 0) {
-      const dist = distributors.value.filter(d => d.id === userInfo.value.distributor_id)[0]
-      const d_data = { points_available: dist.points_available - Number(points.value.point) }
-      await axios.patch(`https://avesh.netserve.in/members/${dist.id}`, d_data)
-    }
+  location.reload()
+}
 
-    // console.log(userInfo.value.points_available + Number(points.value.point))
-    const data = { points_available: userInfo.value.points_available + Number(points.value.point), points_aggregate: userInfo.value.points_aggregate + Number(points.value.point) }
-    const res = await axios.patch(`https://avesh.netserve.in/members/${userInfo.value.id}`, data)
-    if (res.data) {
-      points.value.member_id = userInfo.value.id
-      await axios.post('https://avesh.netserve.in/points', points.value)
-    }
-    else {
-      alert (res.status)
-    }
-  }
-  else if (points.value.type === 'd') {
-    const data = { points_available: userInfo.value.points_available - Number(points.value.point), points_aggregate: userInfo.value.points_aggregate + Number(points.value.point) }
-    const res = await axios.patch(`https://avesh.netserve.in/members/${userInfo.value.id}`, data)
-    if (res.data) {
-      points.value.member_id = userInfo.value.id
-      await axios.post('https://avesh.netserve.in/points', points.value)
-    }
-    else {
-      alert (res.status)
-    }
-  }
-  console.log(points.value)
-  pointsModal.value = false
-  */
+const getData = async (row, treeNode, resolve) => {
+  resolve (await axios.get(`https://avesh.netserve.in/members?filter[distributor_id][eq]=${row.id}`).then(r => r.data))
 }
 
 onMounted(async () => {
@@ -249,7 +226,6 @@ onMounted(async () => {
   })
   electricians.value = await axios.get('https://avesh.netserve.in/members?filter[type][eq]=3').then(res => res.data)
   member.value = await authStore.member
-  console.log(Number('40'))
 })
 </script>
 
@@ -329,23 +305,31 @@ onMounted(async () => {
                 </el-form-item>
               </el-col>
               <el-col :span="9">
-                <el-form-item label="Aadhar Number">
-                  <el-input v-model="form.aadhar" type="number" />
+                <el-form-item label="Date of Birth">
+                  <el-date-picker
+                    v-model="form.dob"
+                    type="date"
+                    placeholder="select date"
+                    value-format="YYYY-MM-DD"
+                  />
                 </el-form-item>
               </el-col>
             </el-row>
             <el-row :gutter="20">
-              <el-col :span="15">
-                <el-form-item label="Name of the Firm">
-                  <el-input v-model="form.firm_title" type="text" />
+              <el-col :span="12">
+                <el-form-item label="Aadhar Number">
+                  <el-input v-model="form.aadhar" type="number" />
                 </el-form-item>
               </el-col>
-              <el-col :span="9">
+              <el-col :span="12">
                 <el-form-item label="Contact No">
                   <el-input v-model="form.contact_no" type="number" />
                 </el-form-item>
               </el-col>
             </el-row>
+            <el-form-item label="Name of the Firm">
+              <el-input v-model="form.firm_title" type="text" />
+            </el-form-item>
             <el-form-item label="Full Address">
               <el-input v-model="form.address" type="text" />
             </el-form-item>
@@ -358,7 +342,7 @@ onMounted(async () => {
               <el-button @click="resetForm">
                 Cancel
               </el-button>
-              <el-button type="primary" plain @click="saveForm">
+              <el-button type="primary" :disabled="isDisabled" plain @click="saveForm">
                 Confirm
               </el-button>
             </div>
@@ -382,8 +366,12 @@ onMounted(async () => {
         <el-table-column prop="firm_title" label="Name of Firm" />
         <el-table-column prop="full_name" label="contact Person" />
         <el-table-column prop="contact_no" label="Phone No." />
-        <el-table-column prop="points_aggregate" label="Aggregate" />
-        <el-table-column prop="points_available" label="Available" />
+        <el-table-column label="Points">
+          <template #default="scope">
+            <span v-if="scope.row.type === 1">{{ scope.row.points_aggregate }} ({{ scope.row.points_available }})</span>
+            <span v-else>{{ scope.row.points_available }}</span>
+          </template>
+        </el-table-column>
         <el-table-column fixed="right" label="Operations" width="120">
           <template #default="scope">
             <el-button link type="primary" size="small" @click="openPointsModal(scope.row)">
@@ -413,7 +401,7 @@ onMounted(async () => {
         <el-table-column prop="firm_title" label="Name of Firm" />
         <el-table-column prop="full_name" label="contact Person" />
         <el-table-column prop="contact_no" label="Phone No." />
-        <el-table-column prop="points_aggregate" label="Aggregate" />
+        <el-table-column prop="points_aggregate" label="Points" />
         <el-table-column fixed="right" label="Operations" width="120">
           <template #default="scope">
             <el-button link type="primary" size="small" @click="openPointsModal(scope.row)">
@@ -479,23 +467,31 @@ onMounted(async () => {
             </el-form-item>
           </el-col>
           <el-col :span="9">
-            <el-form-item label="Aadhar Number">
-              <el-input v-model="edit.aadhar" type="number" />
+            <el-form-item label="Date of Birth">
+              <el-date-picker
+                v-model="edit.dob"
+                type="date"
+                placeholder="select date"
+                value-format="YYYY-MM-DD"
+              />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
-          <el-col :span="15">
-            <el-form-item label="Name of the Firm">
-              <el-input v-model="edit.firm_title" type="text" />
+          <el-col :span="12">
+            <el-form-item label="Aadhar Number">
+              <el-input v-model="edit.aadhar" type="number" />
             </el-form-item>
           </el-col>
-          <el-col :span="9">
+          <el-col :span="12">
             <el-form-item label="Contact No">
               <el-input v-model="edit.contact_no" type="number" />
             </el-form-item>
           </el-col>
         </el-row>
+        <el-form-item label="Name of the Firm">
+          <el-input v-model="edit.firm_title" type="text" />
+        </el-form-item>
         <el-form-item label="Full Address">
           <el-input v-model="edit.address" type="text" />
         </el-form-item>
@@ -508,7 +504,7 @@ onMounted(async () => {
           <el-button @click="closeEditModal">
             Cancel
           </el-button>
-          <el-button type="primary" plain @click="editMember">
+          <el-button type="primary" :disabled="isDisabled" plain @click="editMember">
             Confirm
           </el-button>
         </div>
@@ -518,13 +514,41 @@ onMounted(async () => {
     <el-dialog
       v-model="memberModal"
       :title="userInfo.firm_title"
-      width="500"
+      width="800"
       align-center
     >
-      <h2 class="font-bold">
+      <p>Contact Person: {{ userInfo.full_name }}</p>
+      <p>Aadhar No: {{ userInfo.aadhar }}</p>
+      <p>Date of Birth: {{ userInfo.dob }}</p>
+      <p>Contact No.: {{ userInfo.contact_no }}</p>
+      <p>Email Id: {{ userInfo.email }}</p>
+      <p>Full Address: {{ userInfo.full_address }}</p>
+      <p>City/Town: {{ userInfo.city }}</p>
+      <p v-if="userInfo.type === 1">
+        Points: <span>Aggregate {{ userInfo.points_aggregate }}</span>, Available <span>{{ userInfo.points_available }}</span>
+      </p>
+      <p v-else-if="userInfo.type === 3">
+        Points Available: {{ userInfo.points_aggregate }}
+      </p>
+      <p v-else>
+        Points Available: {{ userInfo.points_available }}
+      </p>
+      <h2 class="font-bold py-5">
         Points History
       </h2>
-      <pre>{{ pointsLog }}</pre>
+      <el-table :data="pointsLog" border style="width:100%">
+        <el-table-column prop="date" label="Date" />
+        <el-table-column prop="point" label="Point">
+          <template #default="scope">
+            <span v-if="scope.row.type === 'c'" class="text-blue-500 font-bold">{{ scope.row.point }}</span>
+            <span v-else class="text-red-500 font-bold">{{ scope.row.point }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="invoice_no" label="Invoice No" />
+        <el-table-column prop="invoice_date" label="Invoice Date" />
+        <el-table-column prop="invoice_amount" label="Amount" />
+        <el-table-column prop="other_info" label="Info" />
+      </el-table>
     </el-dialog>
 
     <el-dialog
@@ -597,7 +621,7 @@ onMounted(async () => {
           <el-button @click="closePointsModal">
             Cancel
           </el-button>
-          <el-button type="primary" plain @click="savePoints">
+          <el-button type="primary" :disabled="isDisabled" plain @click="savePoints">
             Confirm
           </el-button>
         </div>
@@ -605,29 +629,13 @@ onMounted(async () => {
     </el-dialog>
   </main>
   <main v-else-if="member?.type === 1" class="w-full">
-    <div class="flex items-center justify-between">
-      <div class="ml-10 my-3">
-        <h2 class="text-xl font-bold text-gray-800 transition-colors duration-300 transform dark:text-white lg:text-3xl hover:text-gray-700 dark:hover:text-gray-300">
-          {{ member?.firm_title }}
-        </h2>
-      </div>
-      <div class="mr-10 my-3">
-        <span class="text-blue-400 italic">Accumulated Points: </span><span class="font-bold">0</span>
-        <span class="text-blue-400 italic ml-10">Available for Retailers: </span><span class="font-bold">0</span>
-      </div>
-    </div>
+    <Distributor :member="member" />
   </main>
   <main v-else-if="member?.type === 2" class="w-full">
-    <div class="flex items-center justify-between bg-slate-200">
-      <div class="ml-10 my-3">
-        <h2 class="text-xl font-bold text-gray-800 transition-colors duration-300 transform dark:text-white lg:text-3xl hover:text-gray-700 dark:hover:text-gray-300">
-          {{ member?.firm_title }}
-        </h2>
-      </div>
-      <div class="mr-10 my-3">
-        <span class="text-blue-400 italic">Accumulated Points: </span><span class="font-bold">0</span>
-      </div>
-    </div>
+    <Retailer :member="member" />
+  </main>
+  <main v-else-if="member?.type === 3" class="w-full">
+    <Electrician :member="member" />
   </main>
 </template>
 

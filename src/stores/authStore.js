@@ -1,8 +1,7 @@
-/* eslint-disable no-console */
 /* eslint-disable no-alert */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { defineStore } from 'pinia'
-import { GoogleAuthProvider, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, signOut } from 'firebase/auth'
+import { GoogleAuthProvider, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, signOut, updatePassword } from 'firebase/auth'
 import axios from 'axios'
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -57,6 +56,27 @@ export const useAuthStore = defineStore('auth', {
           this.errorMessage = error.message
           alert(this.errorMessage)
         })
+    },
+
+    changePassword(password) {
+      const auth = getAuth()
+      const user = auth.currentUser
+      updatePassword(user, password).then(() => {
+        signOut(auth)
+          .then(() => {
+            alert('Password Changed! Please login again...')
+            this.$router.push('/login')
+          })
+          .catch((error) => {
+            const errorCode = error.code
+            this.errorMessage = error.message
+            alert(this.errorMessage)
+          })
+      }).catch((error) => {
+        const errorCode = error.code
+        this.errorMessage = error.message
+        alert(this.errorMessage)
+      })
     },
   },
 })
