@@ -182,28 +182,48 @@ const closePointsModal = () => {
 }
 const savePoints = async () => {
   isDisabled.value = true
-  if (userInfo.value.distributor_id !== 0) {
-    if (points.value.type === 'c') {
+  const promises = []
+  if (points.value.type === 'c') {
+    if (userInfo.value.type === 2) {
       const dist = distributors.value.filter(d => d.id === userInfo.value.distributor_id)[0]
-      const d_data = { points_available: dist.points_available - Number(points.value.point) }
-      const r_data = { points_available: userInfo.value.points_available + Number(points.value.point) }
-      await axios.patch(`https://avesh.netserve.in/members/${dist.id}`, d_data)
-      await axios.patch(`https://avesh.netserve.in/members/${userInfo.value.id}`, r_data)
+      dist.points_available = dist.points_available - Number(points.value.point)
+      const new_point = points.value
+      promises.push(axios.put(`https://avesh.netserve.in/members/${dist.id}`, dist))
+      new_point.type = 'r'
+      new_point.available = dist.points_available
+      new_point.aggregate = dist.points_aggregate
+      new_point.member_id = dist.id
+      promises.push(axios.post('https://avesh.netserve.in/points', new_point))
     }
-    else if (points.value.type === 'd') {
-      const r_data = { points_available: userInfo.value.points_available - Number(points.value.point) }
-      await axios.patch(`https://avesh.netserve.in/members/${userInfo.value.id}`, r_data)
-    }
+
+    const userData = { points_aggregate: userInfo.value.points_aggregate + Number(points.value.point), points_available: userInfo.value.points_available + Number(points.value.point) }
+    promises.push(axios.patch(`https://avesh.netserve.in/members/${userInfo.value.id}`, userData))
+    const rPoint = points.value
+    rPoint.member_id = userInfo.value.id
+    rPoint.type = 'c'
+    rPoint.aggregate = userInfo.value.points_aggregate + Number(points.value.point)
+    rPoint.available = userInfo.value.points_available + Number(points.value.point)
+    promises.push(axios.post('https://avesh.netserve.in/points', rPoint))
   }
   else {
-    const d_data = (points.value.type === 'c') ? { points_aggregate: userInfo.value.points_aggregate + Number(points.value.point), points_available: userInfo.value.points_available + Number(points.value.point) } : { points_aggregate: userInfo.value.points_aggregate - Number(points.value.point) }
-    await axios.patch(`https://avesh.netserve.in/members/${userInfo.value.id}`, d_data)
+    const userData = { points_aggregate: userInfo.value.points_aggregate - Number(points.value.point) }
+    promises.push(axios.patch(`https://avesh.netserve.in/members/${userInfo.value.id}`, userData))
+    const rPoint = points.value
+    rPoint.member_id = userInfo.value.id
+    rPoint.aggregate = userInfo.value.points_aggregate - Number(points.value.point)
+    rPoint.available = userInfo.value.points_available
+    promises.push(axios.post('https://avesh.netserve.in/points', rPoint))
   }
-
-  points.value.member_id = userInfo.value.id
-  await axios.post('https://avesh.netserve.in/points', points.value)
+  const res = await Promise.allSettled(promises)
+  console.log(res)
   pointsModal.value = false
-  location.reload()
+}
+
+const editTrModal = ref(false)
+const transaction = ref({})
+const openEditTrModal = (row) => {
+  editTrModal.value = true
+  transaction.value = row
 }
 
 const getData = async (row, treeNode, resolve) => {
@@ -369,7 +389,7 @@ onMounted(async () => {
         <el-table-column label="Points">
           <template #default="scope">
             <span v-if="scope.row.type === 1">{{ scope.row.points_aggregate }} ({{ scope.row.points_available }})</span>
-            <span v-else>{{ scope.row.points_available }}</span>
+            <span v-else>{{ scope.row.points_aggregate }}</span>
           </template>
         </el-table-column>
         <el-table-column fixed="right" label="Operations" width="120">
@@ -514,7 +534,7 @@ onMounted(async () => {
     <el-dialog
       v-model="memberModal"
       :title="userInfo.firm_title"
-      width="800"
+      width="90%"
       align-center
     >
       <p>Contact Person: {{ userInfo.full_name }}</p>
@@ -527,11 +547,8 @@ onMounted(async () => {
       <p v-if="userInfo.type === 1">
         Points: <span>Aggregate {{ userInfo.points_aggregate }}</span>, Available <span>{{ userInfo.points_available }}</span>
       </p>
-      <p v-else-if="userInfo.type === 3">
-        Points Available: {{ userInfo.points_aggregate }}
-      </p>
       <p v-else>
-        Points Available: {{ userInfo.points_available }}
+        Points Available: {{ userInfo.points_aggregate }}
       </p>
       <h2 class="font-bold py-5">
         Points History
@@ -540,14 +557,35 @@ onMounted(async () => {
         <el-table-column prop="date" label="Date" />
         <el-table-column prop="point" label="Point">
           <template #default="scope">
-            <span v-if="scope.row.type === 'c'" class="text-blue-500 font-bold">{{ scope.row.point }}</span>
+            <span v-if="scope.row.type === 'c'" class="text-green-500 font-bold">{{ scope.row.point }}</span>
+            <span v-else-if="scope.row.type === 'r'" class="text-blue-500 font-bold">{{ scope.row.point }}</span>
             <span v-else class="text-red-500 font-bold">{{ scope.row.point }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="Point">
+          <template #default="scope">
+            <span v-if="scope.row.type === 'c'" class="text-green-500 font-bold">Credit</span>
+            <span v-else-if="scope.row.type === 'r'" class="text-blue-500 font-bold">Retailer</span>
+            <span v-else class="text-red-500 font-bold">Debit</span>
           </template>
         </el-table-column>
         <el-table-column prop="invoice_no" label="Invoice No" />
         <el-table-column prop="invoice_date" label="Invoice Date" />
         <el-table-column prop="invoice_amount" label="Amount" />
         <el-table-column prop="other_info" label="Info" />
+        <el-table-column label="Running Balance">
+          <el-table-column prop="aggregate" label="Aggregate" />
+          <el-table-column v-if="userInfo.type === 1" prop="available" label="Available" />
+        </el-table-column>
+        <el-table-column fixed="right" label="Operations" width="50">
+          <template #default="scope">
+            <el-button link type="primary" size="small" @click="openEditTrModal(scope.row)">
+              <el-icon :size="15">
+                <Edit />
+              </el-icon>
+            </el-button>
+          </template>
+        </el-table-column>
       </el-table>
     </el-dialog>
 
@@ -626,6 +664,15 @@ onMounted(async () => {
           </el-button>
         </div>
       </template>
+    </el-dialog>
+
+    <el-dialog
+      v-model="editTrModal"
+      title="Edit Transaction"
+      width="500"
+      align-center
+    >
+      <pre>{{ transaction }}</pre>
     </el-dialog>
   </main>
   <main v-else-if="member?.type === 1" class="w-full">
