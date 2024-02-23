@@ -162,7 +162,24 @@ const openMemberModal = async (member) => {
   pointsLog.value = []
   memberModal.value = true
   userInfo.value = member
+  const available = ref(0)
+  const aggregate = ref(0)
   pointsLog.value = await axios.get(`https://avesh.netserve.in/points?filter[member_id][eq]=${userInfo.value.id}`).then(r => r.data)
+  pointsLog.value.forEach((point) => {
+    if (point.type === 'c') {
+      available.value += point.point
+      aggregate.value += point.point
+    }
+    else if (point.type === 'r') {
+      available.value -= point.point
+    }
+    else {
+      aggregate.value -= point.point
+    }
+    point.av = available.value
+    point.ag = aggregate.value
+  })
+  console.log(pointsLog.value)
 }
 const closeMemberModal = () => {
   userInfo.value = {}
@@ -181,6 +198,7 @@ const closePointsModal = () => {
   points.value = {}
 }
 const savePoints = async () => {
+  points.value.ref_id = crypto.randomUUID()
   isDisabled.value = true
   const promises = []
   if (points.value.type === 'c') {
@@ -190,8 +208,6 @@ const savePoints = async () => {
       const new_point = points.value
       promises.push(axios.put(`https://avesh.netserve.in/members/${dist.id}`, dist))
       new_point.type = 'r'
-      new_point.available = dist.points_available
-      new_point.aggregate = dist.points_aggregate
       new_point.member_id = dist.id
       promises.push(axios.post('https://avesh.netserve.in/points', new_point))
     }
@@ -201,8 +217,6 @@ const savePoints = async () => {
     const rPoint = points.value
     rPoint.member_id = userInfo.value.id
     rPoint.type = 'c'
-    rPoint.aggregate = userInfo.value.points_aggregate + Number(points.value.point)
-    rPoint.available = userInfo.value.points_available + Number(points.value.point)
     promises.push(axios.post('https://avesh.netserve.in/points', rPoint))
   }
   else {
@@ -210,13 +224,12 @@ const savePoints = async () => {
     promises.push(axios.patch(`https://avesh.netserve.in/members/${userInfo.value.id}`, userData))
     const rPoint = points.value
     rPoint.member_id = userInfo.value.id
-    rPoint.aggregate = userInfo.value.points_aggregate - Number(points.value.point)
-    rPoint.available = userInfo.value.points_available
     promises.push(axios.post('https://avesh.netserve.in/points', rPoint))
   }
   const res = await Promise.allSettled(promises)
   console.log(res)
   pointsModal.value = false
+  location.reload()
 }
 
 const editTrModal = ref(false)
@@ -224,6 +237,52 @@ const transaction = ref({})
 const openEditTrModal = (row) => {
   editTrModal.value = true
   transaction.value = row
+}
+
+const delTr = async (tr) => {
+  const transactions = await axios.get(`https://avesh.netserve.in/points?expand=member&filter[ref_id][eq]=${tr.ref_id}`).then(r => r.data)
+  if (confirm('Are you sure?')) {
+    if (transactions.length > 0) {
+      transactions.forEach((tr) => {
+        const promises = []
+        let data = {}
+        if (tr.type === 'c') {
+          if (tr.member.type === 1)
+            data = { points_aggregate: tr.member.points_aggregate - tr.point, points_available: tr.member.points_available - tr.point }
+          else
+            data = { points_aggregate: tr.member.points_aggregate - tr.point }
+        }
+        else if (tr.type === 'r') { data = { points_available: tr.member.points_available + tr.point } }
+        else { data = { points_aggregate: tr.member.points_aggregate + tr.point } }
+
+        promises.push(axios.patch(`https://avesh.netserve.in/members/${tr.member.id}`, data))
+        promises.push(axios.delete(`https://avesh.netserve.in/points/${tr.id}`))
+        Promise.allSettled(promises).then(res => console.log(res))
+      })
+    }
+    alert('Deleted!')
+    location.reload()
+  }
+}
+
+const editTr = async (trn) => {
+  const transactions = await axios.get(`https://avesh.netserve.in/points?filter[ref_id][eq]=${trn.ref_id}`).then(r => r.data)
+  if (transactions.length > 0) {
+    const promises = []
+    transactions.forEach((tr) => {
+      const data = {
+        date: trn.date,
+        invoice_no: trn.invoice_no,
+        invoice_amount: trn.invoice_amount,
+        invoice_date: trn.invoice_date,
+        other_info: trn.other_info,
+      }
+      promises.push(axios.patch(`https://avesh.netserve.in/points/${tr.id}`, data))
+    })
+    Promise.allSettled(promises).then(res => console.log(res))
+    alert('Updated!!')
+    location.reload()
+  }
 }
 
 const getData = async (row, treeNode, resolve) => {
@@ -513,7 +572,7 @@ onMounted(async () => {
           <el-input v-model="edit.firm_title" type="text" />
         </el-form-item>
         <el-form-item label="Full Address">
-          <el-input v-model="edit.address" type="text" />
+          <el-input v-model="edit.full_address" type="text" />
         </el-form-item>
         <el-form-item label="City/Town">
           <el-input v-model="edit.city" type="text" />
@@ -574,8 +633,8 @@ onMounted(async () => {
         <el-table-column prop="invoice_amount" label="Amount" />
         <el-table-column prop="other_info" label="Info" />
         <el-table-column label="Running Balance">
-          <el-table-column prop="aggregate" label="Aggregate" />
-          <el-table-column v-if="userInfo.type === 1" prop="available" label="Available" />
+          <el-table-column prop="ag" label="Aggregate" />
+          <el-table-column v-if="userInfo.type === 1" prop="av" label="Available" />
         </el-table-column>
         <el-table-column fixed="right" label="Operations" width="50">
           <template #default="scope">
@@ -672,17 +731,80 @@ onMounted(async () => {
       width="500"
       align-center
     >
-      <pre>{{ transaction }}</pre>
+      <el-form ref="trFormRef" :model="transaction" label-width="120px" status-icon label-position="top">
+        <el-form-item label="">
+          <el-radio-group v-model="transaction.type" class="ml-4" disabled>
+            <el-radio label="c">
+              Credit
+            </el-radio>
+            <el-radio label="d">
+              Debit
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="Date">
+              <el-date-picker
+                v-model="transaction.date"
+                type="date"
+                placeholder="select date"
+                value-format="YYYY-MM-DD"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="Points">
+              <el-input v-model="transaction.point" type="number" disabled />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row v-if="transaction.type !== 'd'" :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="Invoice Date">
+              <el-date-picker
+                v-model="transaction.invoice_date"
+                type="date"
+                placeholder="select date"
+                value-format="YYYY-MM-DD"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="Invoice No">
+              <el-input v-model="transaction.invoice_no" type="number" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="Invoice Amount">
+              <el-input v-model="transaction.invoice_amount" type="number" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="Description">
+          <el-input v-model="transaction.other_info" type="text" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="editTrModal = false">
+            Cancel
+          </el-button>
+          <el-button type="primary" :disabled="isDisabled" plain @click="editTr(transaction)">
+            Edit
+          </el-button>
+          <el-button type="danger" :disabled="isDisabled" plain @click="delTr(transaction)">
+            Delete
+          </el-button>
+        </div>
+      </template>
     </el-dialog>
   </main>
   <main v-else-if="member?.type === 1" class="w-full">
     <Distributor :member="member" />
   </main>
-  <main v-else-if="member?.type === 2" class="w-full">
+  <main v-else-if="member?.type === 2 || member?.type === 3" class="w-full">
     <Retailer :member="member" />
-  </main>
-  <main v-else-if="member?.type === 3" class="w-full">
-    <Electrician :member="member" />
   </main>
 </template>
 
