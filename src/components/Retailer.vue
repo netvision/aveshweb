@@ -36,6 +36,16 @@ onMounted(async () => {
       <span class="text-blue-400 italic ml-10">Available Points: </span><span class="font-bold">{{ member.points_aggregate }}</span>
     </div>
   </div>
+  <div class="m-10">
+    <h2 class="font-bold text-lg border-b-2 border-blue-900">Profile</h2>
+    <p>Contact Person: {{ member?.full_name }}</p>
+    <p>Aadhar No: {{ member?.aadhar }}</p>
+    <p>Date of Birth: {{ member?.dob }}</p>
+    <p>Contact No.: {{ member?.contact_no }}</p>
+    <p>Email Id: {{ member?.email }}</p>
+    <p>Full Address: {{ member?.full_address }}</p>
+    <p>City/Town: {{ member?.city }}</p>
+  </div>
   <div class="px-10">
     <h2 class="font-bold py-4">
       Points History

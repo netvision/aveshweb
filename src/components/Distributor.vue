@@ -190,6 +190,16 @@ onMounted(async () => {
       <span class="text-blue-400 italic ml-10">Available for Retailers: </span><span class="font-bold">{{ member.points_available }}</span>
     </div>
   </div>
+  <div class="m-10">
+    <h2 class="font-bold text-lg border-b-2 border-blue-900">Profile</h2>
+    <p>Contact Person: {{ member?.full_name }}</p>
+    <p>Aadhar No: {{ member?.aadhar }}</p>
+    <p>Date of Birth: {{ member?.dob }}</p>
+    <p>Contact No.: {{ member?.contact_no }}</p>
+    <p>Email Id: {{ member?.email }}</p>
+    <p>Full Address: {{ member?.full_address }}</p>
+    <p>City/Town: {{ member?.city }}</p>
+  </div>
   <div class="px-10">
     <el-tabs v-model="activeTab" class="demo-tabs">
       <el-tab-pane label="Points Log" name="points">
@@ -246,78 +256,12 @@ onMounted(async () => {
                   <Memo />
                 </el-icon>
               </el-button>
-              <el-button link type="primary" size="small" @click="openEditModal(scope.row)">
-                <el-icon :size="15">
-                  <Edit />
-                </el-icon>
-              </el-button>
             </template>
           </el-table-column>
         </el-table>
       </el-tab-pane>
     </el-tabs>
   </div>
-
-  <el-dialog
-    v-model="editMemberModal"
-    title="Edit Member"
-    width="500"
-    align-center
-  >
-    <el-form ref="editFormRef" :model="edit" label-width="120px" status-icon label-position="top">
-      <el-divider content-position="left" class="mt-10">
-        Personal Details
-      </el-divider>
-      <el-row :gutter="20">
-        <el-col :span="15">
-          <el-form-item label="Full Name">
-            <el-input v-model="edit.full_name" type="text" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="9">
-          <el-form-item label="Date of Birth">
-            <el-date-picker
-              v-model="edit.dob"
-              type="date"
-              placeholder="select date"
-              value-format="YYYY-MM-DD"
-            />
-          </el-form-item>
-        </el-col>
-      </el-row>
-      <el-row :gutter="20">
-        <el-col :span="12">
-          <el-form-item label="Aadhar Number">
-            <el-input v-model="edit.aadhar" type="number" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="Contact No">
-            <el-input v-model="edit.contact_no" type="number" />
-          </el-form-item>
-        </el-col>
-      </el-row>
-      <el-form-item label="Name of the Firm">
-        <el-input v-model="edit.firm_title" type="text" />
-      </el-form-item>
-      <el-form-item label="Full Address">
-        <el-input v-model="edit.full_address" type="text" />
-      </el-form-item>
-      <el-form-item label="City/Town">
-        <el-input v-model="edit.city" type="text" />
-      </el-form-item>
-    </el-form>
-    <template #footer>
-      <div class="dialog-footer">
-        <el-button @click="closeEditModal">
-          Cancel
-        </el-button>
-        <el-button type="primary" :disabled="isDisabled" plain @click="editMember">
-          Confirm
-        </el-button>
-      </div>
-    </template>
-  </el-dialog>
 
   <el-dialog
     v-model="memberModal"
