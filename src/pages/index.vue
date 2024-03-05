@@ -166,15 +166,17 @@ const openMemberModal = async (member) => {
   const aggregate = ref(0)
   pointsLog.value = await axios.get(`https://avesh.netserve.in/points?filter[member_id][eq]=${userInfo.value.id}`).then(r => r.data)
   pointsLog.value.forEach((point) => {
-    if (point.type === 'c') {
-      available.value += point.point
-      aggregate.value += point.point
-    }
-    else if (point.type === 'r') {
-      available.value -= point.point
-    }
-    else {
-      aggregate.value -= point.point
+    if (!point.is_deleted) {
+      if (point.type === 'c') {
+        available.value += point.point
+        aggregate.value += point.point
+      }
+      else if (point.type === 'r') {
+        available.value -= point.point
+      }
+      else {
+        aggregate.value -= point.point
+      }
     }
     point.av = available.value
     point.ag = aggregate.value
@@ -239,32 +241,6 @@ const openEditTrModal = (row) => {
   transaction.value = row
 }
 
-const delTr = async (tr) => {
-  const transactions = await axios.get(`https://avesh.netserve.in/points?expand=member&filter[ref_id][eq]=${tr.ref_id}`).then(r => r.data)
-  if (confirm('Are you sure?')) {
-    if (transactions.length > 0) {
-      transactions.forEach((tr) => {
-        const promises = []
-        let data = {}
-        if (tr.type === 'c') {
-          if (tr.member.type === 1)
-            data = { points_aggregate: tr.member.points_aggregate - tr.point, points_available: tr.member.points_available - tr.point }
-          else
-            data = { points_aggregate: tr.member.points_aggregate - tr.point }
-        }
-        else if (tr.type === 'r') { data = { points_available: tr.member.points_available + tr.point } }
-        else { data = { points_aggregate: tr.member.points_aggregate + tr.point } }
-
-        promises.push(axios.patch(`https://avesh.netserve.in/members/${tr.member.id}`, data))
-        promises.push(axios.delete(`https://avesh.netserve.in/points/${tr.id}`))
-        Promise.allSettled(promises).then(res => console.log(res))
-      })
-    }
-    alert('Deleted!')
-    location.reload()
-  }
-}
-
 const editTr = async (trn) => {
   const transactions = await axios.get(`https://avesh.netserve.in/points?filter[ref_id][eq]=${trn.ref_id}`).then(r => r.data)
   if (transactions.length > 0) {
@@ -281,6 +257,38 @@ const editTr = async (trn) => {
     })
     Promise.allSettled(promises).then(res => console.log(res))
     alert('Updated!!')
+    location.reload()
+  }
+}
+
+const delTrModal = ref(false)
+const openDelTrModal = (row) => {
+  delTrModal.value = true
+  transaction.value = row
+}
+
+const delTr = async (trs) => {
+  const transactions = await axios.get(`https://avesh.netserve.in/points?expand=member&filter[ref_id][eq]=${trs.ref_id}`).then(r => r.data)
+  if (confirm('Are you sure?')) {
+    if (transactions.length > 0) {
+      transactions.forEach((tr) => {
+        const promises = []
+        let data = {}
+        if (tr.type === 'c') {
+          if (tr.member.type === 1)
+            data = { points_aggregate: tr.member.points_aggregate - tr.point, points_available: tr.member.points_available - tr.point }
+          else
+            data = { points_aggregate: tr.member.points_aggregate - tr.point }
+        }
+        else if (tr.type === 'r') { data = { points_available: tr.member.points_available + tr.point } }
+        else { data = { points_aggregate: tr.member.points_aggregate + tr.point } }
+
+        promises.push(axios.patch(`https://avesh.netserve.in/members/${tr.member.id}`, data))
+        promises.push(axios.patch(`https://avesh.netserve.in/points/${tr.id}`, { is_deleted: 1, del_reason: trs.del_reason }))
+        Promise.allSettled(promises).then(res => console.log(res))
+      })
+    }
+    alert('Deleted!')
     location.reload()
   }
 }
@@ -616,9 +624,16 @@ onMounted(async () => {
         <el-table-column prop="date" label="Date" />
         <el-table-column prop="point" label="Point">
           <template #default="scope">
-            <span v-if="scope.row.type === 'c'" class="text-green-500 font-bold">{{ scope.row.point }}</span>
-            <span v-else-if="scope.row.type === 'r'" class="text-blue-500 font-bold">{{ scope.row.point }}</span>
-            <span v-else class="text-red-500 font-bold">{{ scope.row.point }}</span>
+            <div v-if="scope.row.is_deleted" class="line-through text-black">
+              <span v-if="scope.row.type === 'c'" class="text-green-500 font-bold">{{ scope.row.point }}</span>
+              <span v-else-if="scope.row.type === 'r'" class="text-blue-500 font-bold">{{ scope.row.point }}</span>
+              <span v-else class="text-red-500 font-bold">{{ scope.row.point }}</span>
+            </div>
+            <div v-else>
+              <span v-if="scope.row.type === 'c'" class="text-green-500 font-bold">{{ scope.row.point }}</span>
+              <span v-else-if="scope.row.type === 'r'" class="text-blue-500 font-bold">{{ scope.row.point }}</span>
+              <span v-else class="text-red-500 font-bold">{{ scope.row.point }}</span>
+            </div>
           </template>
         </el-table-column>
         <el-table-column label="Point">
@@ -638,11 +653,18 @@ onMounted(async () => {
         </el-table-column>
         <el-table-column fixed="right" label="Operations" width="50">
           <template #default="scope">
-            <el-button link type="primary" size="small" @click="openEditTrModal(scope.row)">
-              <el-icon :size="15">
-                <Edit />
-              </el-icon>
-            </el-button>
+            <div v-if="!scope.row.is_deleted">
+              <el-button link type="primary" size="small" @click="openEditTrModal(scope.row)">
+                <el-icon :size="15">
+                  <Edit />
+                </el-icon>
+              </el-button>
+              <el-button link type="primary" size="small" @click="openDelTrModal(scope.row)">
+                <el-icon :size="15">
+                  <Delete />
+                </el-icon>
+              </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -656,7 +678,7 @@ onMounted(async () => {
     >
       <el-divider />
       <h2 class="font-bold">
-        Points debit/Credit Form
+        Points Credit/Redemption Form
       </h2>
       <el-divider />
       <el-form ref="pointsFormRef" :model="points" label-width="120px" status-icon label-position="top">
@@ -666,7 +688,7 @@ onMounted(async () => {
               Credit
             </el-radio>
             <el-radio label="d">
-              Debit
+              Redemption
             </el-radio>
           </el-radio-group>
         </el-form-item>
@@ -793,8 +815,33 @@ onMounted(async () => {
           <el-button type="primary" :disabled="isDisabled" plain @click="editTr(transaction)">
             Edit
           </el-button>
-          <el-button type="danger" :disabled="isDisabled" plain @click="delTr(transaction)">
-            Delete
+        </div>
+      </template>
+    </el-dialog>
+
+    <el-dialog
+      v-model="delTrModal"
+      :title="userInfo.firm_title"
+      width="500"
+      align-center
+    >
+      <el-divider />
+      <h2 class="font-bold">
+        {{ transaction }}
+      </h2>
+      <el-divider />
+      <el-form ref="delTrFormRef" :model="transaction" label-width="120px" status-icon label-position="top">
+        <el-form-item label="Reason of Deletion">
+          <el-input v-model="transaction.del_reason" type="text" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="delTrModal = false">
+            Cancel
+          </el-button>
+          <el-button type="primary" :disabled="isDisabled" plain @click="delTr(transaction)">
+            Confirm Delete
           </el-button>
         </div>
       </template>
