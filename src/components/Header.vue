@@ -63,13 +63,20 @@ onMounted(async () => {
               <a class="text-2xl font-bold text-gray-800 transition-colors duration-300 transform dark:text-white lg:text-3xl hover:text-gray-700 dark:hover:text-gray-300" href="/">Avesh - Dashboard</a>
             </div>
             <div class="flex justify-center mt-6 lg:flex lg:mt-0 lg:-mx-2">
-              <span class="text-blue-400 italic mr-3">{{ member.full_name }}</span>
-              <a href="#" class="mx-2 text-gray-600 transition-colors duration-300 transform dark:text-gray-300 hover:text-gray-500 dark:hover:text-gray-300" aria-label="Reddit" @click="openPasswordModal">
-                Change Password
-              </a>
-              <a href="#" class="mx-2 text-gray-600 transition-colors duration-300 transform dark:text-gray-300 hover:text-gray-500 dark:hover:text-gray-300" aria-label="Reddit" @click="logout">
-                Logout
-              </a>
+              <el-dropdown>
+                <span class="el-dropdown-link text-lg">
+                  {{ member.full_name }}
+                  <el-icon class="el-icon--right">
+                    <arrow-down />
+                  </el-icon>
+                </span>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item @click="openPasswordModal">Change Password</el-dropdown-item>
+                    <el-dropdown-item @click="logout">Logout</el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
             </div>
             <el-dialog
               v-model="passwordModal"
@@ -111,3 +118,12 @@ onMounted(async () => {
     </template>
   </Suspense>
 </template>
+
+<style scoped>
+.example-showcase .el-dropdown-link {
+  cursor: pointer;
+  color: var(--el-color-primary);
+  display: flex;
+  align-items: center;
+}
+</style>

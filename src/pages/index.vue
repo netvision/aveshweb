@@ -825,11 +825,6 @@ onMounted(async () => {
       width="500"
       align-center
     >
-      <el-divider />
-      <h2 class="font-bold">
-        {{ transaction }}
-      </h2>
-      <el-divider />
       <el-form ref="delTrFormRef" :model="transaction" label-width="120px" status-icon label-position="top">
         <el-form-item label="Reason of Deletion">
           <el-input v-model="transaction.del_reason" type="text" />

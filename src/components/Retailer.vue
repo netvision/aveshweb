@@ -9,18 +9,20 @@ onMounted(async () => {
   let av = 0
   let ag = 0
   points.value.forEach((point) => {
-    if (point.type === 'c') {
-      av += point.point
-      ag += point.point
+    if (point.is_deleted === 0) {
+      if (point.type === 'c') {
+        av += point.point
+        ag += point.point
+      }
+      else if (point.type === 'r') {
+        av -= point.point
+      }
+      else {
+        ag -= point.point
+      }
+      point.av = av
+      point.ag = ag
     }
-    else if (point.type === 'r') {
-      av -= point.point
-    }
-    else {
-      ag -= point.point
-    }
-    point.av = av
-    point.ag = ag
   })
 })
 </script>
@@ -54,9 +56,16 @@ onMounted(async () => {
       <el-table-column prop="date" label="Date" />
       <el-table-column prop="point" label="Point">
         <template #default="scope">
-          <span v-if="scope.row.type === 'c'" class="text-green-500 font-bold">{{ scope.row.point }}</span>
-          <span v-else-if="scope.row.type === 'r'" class="text-blue-500 font-bold">{{ scope.row.point }}</span>
-          <span v-else class="text-red-500 font-bold">{{ scope.row.point }}</span>
+          <div v-if="scope.row.is_deleted" class="line-through text-black">
+            <span v-if="scope.row.type === 'c'" class="text-green-500 font-bold">{{ scope.row.point }}</span>
+            <span v-else-if="scope.row.type === 'r'" class="text-blue-500 font-bold">{{ scope.row.point }}</span>
+            <span v-else class="text-red-500 font-bold">{{ scope.row.point }}</span>
+          </div>
+          <div v-else>
+            <span v-if="scope.row.type === 'c'" class="text-green-500 font-bold">{{ scope.row.point }}</span>
+            <span v-else-if="scope.row.type === 'r'" class="text-blue-500 font-bold">{{ scope.row.point }}</span>
+            <span v-else class="text-red-500 font-bold">{{ scope.row.point }}</span>
+          </div>
         </template>
       </el-table-column>
       <el-table-column label="Point">
