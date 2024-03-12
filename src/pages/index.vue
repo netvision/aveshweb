@@ -88,36 +88,33 @@ const saveForm = async () => {
   isDisabled.value = true
   if (form.password === form.con_password) {
     const auth = getAuth()
-    createUserWithEmailAndPassword(auth, form.email, form.password)
-      .then((credentials) => {
-        const user = credentials.user
-        if (user) {
-          axios.post('https://avesh.netserve.in/members',
-            {
-              type: form.type,
-              distributor_id: form.distributor_id ?? 0,
-              full_name: form.full_name,
-              dob: form.dob,
-              email: form.email,
-              contact_no: form.contact_no,
-              firm_title: form.firm_title,
-              aadhar: form.aadhar,
-              full_address: form.address,
-              city: form.city,
-            })
-            .then((res) => {
-              if (res.status === 201) {
-                alert('user member created successfully! please login once again')
-                authStore.signout()
-              }
-            })
-            .catch((error) => {
-              console.log(error.message)
-            })
+    axios.post('https://avesh.netserve.in/members',
+      {
+        type: form.type,
+        distributor_id: form.distributor_id ?? 0,
+        full_name: form.full_name,
+        dob: form.dob,
+        email: form.email,
+        contact_no: form.contact_no,
+        firm_title: form.firm_title,
+        aadhar: form.aadhar,
+        full_address: form.address,
+        city: form.city,
+      })
+      .then((res) => {
+        if (createUserWithEmailAndPassword(auth, res.data.email, form.password)) {
+          alert('user member created successfully! please login once again')
+          authStore.signout()
+        }
+        else {
+          axios.delete(`https://avesh.netserve.in/members/${res.data.id}`)
+          alert('Couldnot create user! Please logout and login again and try')
         }
       })
       .catch((error) => {
         console.log(error.message)
+        alert(error.message)
+        alert('couldnt create user! Please try again.')
       })
   }
   else { console.log('please check password') }
