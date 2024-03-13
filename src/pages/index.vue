@@ -70,18 +70,36 @@ const validatePass2 = (rule, value, callback) => {
 
 const checkEmail = (rule, value, callback) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (value === '')
-    callback(new Error('Email is required...'))
-  else if (!emailRegex.test(value))
-    callback(new Error('please enter valid email'))
-  else
-    callback()
+  if (value === '') { callback(new Error('Email is required...')) }
+  else if (!emailRegex.test(value)) { callback(new Error('please enter valid email')) }
+  else {
+    axios.get(`https://avesh.netserve.in/members?filter[email][eq]=${value}`).then((res) => {
+      if (res.data.length > 0)
+        callback(new Error('Email already registered!'))
+      else
+        callback()
+    })
+  }
+}
+
+const checkAadhar = (rule, value, callback) => {
+  if (value === '') { callback(new Error('Aadhar is required...')) }
+  else if (value.replace(/\s/g, '').length !== 12) { callback(new Error('Please enter correct aadhar number (12 Digits)....')) }
+  else {
+    axios.get(`https://avesh.netserve.in/members?filter[aadhar][eq]=${value}`).then((res) => {
+      if (res.data.length > 0)
+        callback(new Error('Aadhar already registered!'))
+      else
+        callback()
+    })
+  }
 }
 
 const rules = reactive({
   password: [{ validator: validatePass, trigger: 'blur' }],
   con_password: [{ validator: validatePass2, trigger: 'blur' }],
   email: [{ validator: checkEmail, trigger: 'blur' }],
+  aadhar: [{ validator: checkAadhar, trigger: 'blur' }],
 })
 
 const saveForm = async () => {
@@ -401,7 +419,7 @@ onMounted(async () => {
             </el-row>
             <el-row :gutter="20">
               <el-col :span="12">
-                <el-form-item label="Aadhar Number">
+                <el-form-item label="Aadhar Number" prop="aadhar">
                   <el-input v-model="form.aadhar" type="number" />
                 </el-form-item>
               </el-col>
