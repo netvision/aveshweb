@@ -15,6 +15,7 @@ const newMemberModal = ref(false)
 const disabled = ref(true)
 const isDisabled = ref(false)
 const formRef = ref()
+const fileList = ref()
 
 const form = reactive({
   type: '',
@@ -341,6 +342,21 @@ onMounted(async () => {
         </h2>
       </div>
       <div class="mr-10 my-3">
+        <el-upload
+          v-model:file-list="fileList"
+          class="upload-demo"
+          action="https://avesh.netserve.in/member/photo"
+          :data="{ member_id: 1 }"
+        >
+          <el-button type="primary">
+            Click to upload
+          </el-button>
+          <template #tip>
+            <div class="el-upload__tip">
+              jpg/png files with a size less than 500KB.
+            </div>
+          </template>
+        </el-upload>
         <div class="text-right p-5">
           <el-button type="primary" plain @click="newMemberModal = true">
             New Member

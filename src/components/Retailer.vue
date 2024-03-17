@@ -1,10 +1,38 @@
 <script setup>
 import axios from 'axios'
+import { Edit } from '@element-plus/icons-vue'
 const props = defineProps(['member'])
 const member = ref(props.member)
 const points = ref([])
+const profilePic = ref()
+const timestamp = new Date().getTime()
+const uploading = ref(0)
+
+const handleAvatarSuccess = (response, uploadFile) => {
+  profilePic.value = URL.createObjectURL(uploadFile.raw)
+}
+
+const beforeAvatarUpload = (rawFile) => {
+  if (rawFile.type !== 'image/jpeg') {
+    ElMessage.error('Profile picture must be JPG format!')
+    return false
+  }
+  else if (rawFile.size / 1024 / 1024 > 1) {
+    ElMessage.error('Profile picture size can not exceed 1MB!')
+    return false
+  }
+  return true
+}
+
+const progress = (e, file, files) => {
+  uploading.value = e.percent || 0
+}
 
 onMounted(async () => {
+  const profile = await axios.get(`https://avesh.netserve.in/profile-photos/member-${member.value.id}.jpg`)
+  if (profile?.status === 200)
+    profilePic.value = `https://avesh.netserve.in/profile-photos/member-${member.value.id}.jpg?${timestamp}`
+
   points.value = await axios.get(`https://avesh.netserve.in/points?filter[member_id][eq]=${member.value.id}`).then(r => r.data)
   let av = 0
   let ag = 0
@@ -30,8 +58,23 @@ onMounted(async () => {
 <template>
   <div class="flex items-center justify-between">
     <div class="ml-10 my-3">
+      <el-upload
+        class="avatar-uploader"
+        :data="{ member_id: member.id }"
+        action="https://avesh.netserve.in/member/photo"
+        :show-file-list="false"
+        :on-success="handleAvatarSuccess"
+        :before-upload="beforeAvatarUpload"
+        :on-progress="progress"
+      >
+        <img v-if="profilePic" :src="profilePic" class="avatar">
+        <el-icon v-else class="avatar-uploader-icon">
+          <Plus />
+        </el-icon>
+      </el-upload>
+      <el-progress v-if="uploading > 0" :percentage="uploading" status="success" />
       <h2 class="text-xl font-bold text-gray-800 transition-colors duration-300 transform dark:text-white lg:text-3xl hover:text-gray-700 dark:hover:text-gray-300">
-        {{ member?.firm_title }} <span><el-button>edit</el-button></span>
+        {{ member?.firm_title }} <span><el-button :icon="Edit" text /></span>
       </h2>
     </div>
     <div class="mr-10 my-3">
