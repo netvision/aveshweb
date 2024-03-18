@@ -189,10 +189,26 @@ const progress = (e, file, files) => {
   uploading.value = e.percent || 0
 }
 
+async function checkUrlExists(url) {
+  try {
+    const response = await axios.head(url)
+    return response.status === 200 // Check if the status is 200 OK
+  }
+  catch (error) {
+    console.error('Error checking URL:', error)
+    return false // Assume URL doesn't exist in case of error
+  }
+}
+
 onMounted(async () => {
-  const profile = await axios.get(`https://avesh.netserve.in/profile-photos/member-${member.value.id}.jpg`)
-  if (profile?.status === 200)
-    profilePic.value = `https://avesh.netserve.in/profile-photos/member-${member.value.id}.jpg?${timestamp}`
+  checkUrlExists(`https://avesh.netserve.in/profile-photos/member-${member.value.id}.jpg`)
+    .then((exists) => {
+      if (exists)
+        profilePic.value = `https://avesh.netserve.in/profile-photos/member-${member.value.id}.jpg`
+
+      else
+        profilePic.value = ''
+    })
   retailers.value = await axios.get(`https://avesh.netserve.in/members?filter[distributor_id][eq]=${member.value.id}`).then(r => r.data)
   points.value = await axios.get(`https://avesh.netserve.in/points?filter[member_id][eq]=${member.value.id}`).then(r => r.data)
   let av = 0
