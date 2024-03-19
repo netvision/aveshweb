@@ -1,7 +1,8 @@
+<!-- eslint-disable no-alert -->
 <!-- eslint-disable no-console -->
 <script setup>
 import axios from 'axios'
-import { Plus } from '@element-plus/icons-vue'
+import { Delete, DocumentAdd, Plus } from '@element-plus/icons-vue'
 const docs = ref()
 const docModal = ref(false)
 const newDoc = ref({})
@@ -12,18 +13,40 @@ const handleUrl = (res, f, files) => {
 }
 
 const openDocModal = (doc) => {
-  newDoc.value.description = doc.description
-  // visibility.value = doc.visibility.split(',')
+  newDoc.value = doc ?? {}
+  visibility.value = (doc?.visibility) ? doc.visibility.split(',') : []
   docModal.value = true
 }
 
 const saveDoc = async () => {
   const currentDate = new Date()
-  newDoc.value.uploaded_on = currentDate.toISOString().split('T')[0]
+  newDoc.value.uploaded_on = newDoc.value.uploaded_on ?? currentDate.toISOString().split('T')[0]
   // console.log(Object.keys(newDoc.value.visibility).join(','))
   newDoc.value.visibility = visibility.value.join(',')
-  const res = await axios.post('https://avesh.netserve.in/uploads', newDoc.value)
-  console.log(res.status)
+  const res = (newDoc.value.id) ? await axios.put(`https://avesh.netserve.in/uploads/${newDoc.value.id}`, newDoc.value) : await axios.post('https://avesh.netserve.in/uploads', newDoc.value)
+  if (res.status === 201)
+    docs.value.push(res.data)
+  else if (res.status === 200)
+    alert('Edited successfully')
+  else
+    alert('Try Again later')
+  docModal.value = false
+}
+
+const delDoc = async (id) => {
+  if (confirm('Are you sure you want to delete?')) {
+    const res = await axios.delete(`https://avesh.netserve.in/uploads/${id}`)
+    if (res.status === 204) {
+      docs.value = docs.value.filter(doc => doc.id !== id)
+      alert('Deleted succesfully')
+    }
+    else {
+      alert ('Couldnt delete! Try Again...')
+    }
+  }
+  else {
+    docModal.value = false
+  }
   docModal.value = false
 }
 
@@ -33,39 +56,34 @@ onMounted(async () => {
 </script>
 
 <template>
-  <h2>Documents</h2>
+  <h2 class="pt-10 font-bold text-blue-900 border-b-2 border-blue-400">Documents</h2>
+  <el-button text :icon="DocumentAdd" @click="openDocModal({})">
+    Add New Document
+  </el-button>
   <el-table :data="docs" border style="width:100%">
     <el-table-column prop="uploaded_on" label="Date" />
-    <el-table-column prop="description" label="Description" />
-    <el-table-column fixed="right" label="Operations">
+    <el-table-column label="Description">
       <template #default="scope">
-        <el-button link type="primary" size="small" @click="viewDoc(scope.row)">
-          <el-icon :size="15">
-            <Document />
-          </el-icon>
-        </el-button>
+        <a :href="scope.row.url" target="_blank">{{ scope.row.description }}</a>
+      </template>
+    </el-table-column>
+    <el-table-column label="" width="50">
+      <template #default="scope">
         <el-button link type="primary" size="small" @click="openDocModal(scope.row)">
           <el-icon :size="15">
             <Edit />
           </el-icon>
         </el-button>
-        <el-button link type="primary" size="small" @click="delDoc(scope.row)">
-          <el-icon :size="15">
-            <Delete />
-          </el-icon>
-        </el-button>
       </template>
     </el-table-column>
   </el-table>
-  <el-button text :icon="DocumentAdd" @click="docModal = true">
-    Add New Document
-  </el-button>
   <el-dialog
     v-model="docModal"
-    title="New Document"
+    :title="(newDoc.id) ? 'Edit' : 'New Document'"
     width="500"
   >
     <el-upload
+      v-if="!newDoc.id"
       v-model:file-list="file"
       class="upload-demo"
       action="https://avesh.netserve.in/upload/up"
@@ -81,16 +99,19 @@ onMounted(async () => {
         </div>
       </template>
     </el-upload>
+    <div v-else class="py-5 font-bold">
+      <a :href="newDoc.url" target="_blank">{{ newDoc.url }}</a>
+    </div>
     <el-form :model="newDoc" label-width="auto" style="max-width: 600px" label-position="top">
       <el-row :gutter="10">
         <el-col :span="8">
-          <el-form-item label="Document Type">
+          <el-form-item label="Document Title">
             <el-input v-model="newDoc.type" />
           </el-form-item>
         </el-col>
         <el-col :span="16">
           <el-form-item label="Description">
-            <el -input v-model="newDoc.description" />
+            <el-input v-model="newDoc.description" />
           </el-form-item>
         </el-col>
       </el-row>
@@ -104,10 +125,13 @@ onMounted(async () => {
     </el-form>
     <template #footer>
       <div class="dialog-footer">
+        <el-button v-if="newDoc.id" :icon="Delete" type="danger" @click="delDoc(newDoc.id)">
+          Delete
+        </el-button>
         <el-button @click="docModal = false">
           Cancel
         </el-button>
-        <el-button type="primary" @click="saveDoc">
+        <el-button @click="saveDoc">
           Confirm
         </el-button>
       </div>
