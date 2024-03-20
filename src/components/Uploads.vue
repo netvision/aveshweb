@@ -56,7 +56,9 @@ onMounted(async () => {
 </script>
 
 <template>
-  <h2 class="pt-10 font-bold text-blue-900 border-b-2 border-blue-400">Documents</h2>
+  <h2 class="pt-10 font-bold text-blue-900 border-b-2 border-blue-400">
+    Documents
+  </h2>
   <el-button text :icon="DocumentAdd" @click="openDocModal({})">
     Add New Document
   </el-button>
@@ -125,9 +127,7 @@ onMounted(async () => {
     </el-form>
     <template #footer>
       <div class="dialog-footer">
-        <el-button v-if="newDoc.id" :icon="Delete" type="danger" @click="delDoc(newDoc.id)">
-          Delete
-        </el-button>
+        <el-button v-if="newDoc.id" :icon="Delete" type="danger" text @click="delDoc(newDoc.id)" />
         <el-button @click="docModal = false">
           Cancel
         </el-button>

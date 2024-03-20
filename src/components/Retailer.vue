@@ -1,12 +1,15 @@
+<!-- eslint-disable no-console -->
 <script setup>
 import axios from 'axios'
-import { Edit } from '@element-plus/icons-vue'
+import { DocumentCopy, Edit } from '@element-plus/icons-vue'
 const props = defineProps(['member'])
 const member = ref(props.member)
 const points = ref([])
 const profilePic = ref()
 const timestamp = new Date().getTime()
 const uploading = ref(0)
+const docs = ref()
+const updates = ref()
 
 const handleAvatarSuccess = (response, uploadFile) => {
   profilePic.value = URL.createObjectURL(uploadFile.raw)
@@ -67,44 +70,92 @@ onMounted(async () => {
       point.ag = ag
     }
   })
+  const ups = await axios.get('https://avesh.netserve.in/new-updates').then(r => r.data)
+  if (ups.length > 0) {
+    updates.value = ups.filter((up) => {
+      const visibility = up.visibility.split(',')
+      if (member.type === 2)
+        return visibility.includes('Retailer')
+      else
+        return visibility.includes('Electrician')
+    })
+      .map((doc) => {
+        return { ...doc, images: JSON.parse(doc.image_urls) }
+      })
+  }
+
+  const uploads = await axios.get('https://avesh.netserve.in/uploads').then(r => r.data)
+  if (uploads.length > 0) {
+    docs.value = uploads.filter((up) => {
+      const visibility = up.visibility.split(',')
+      if (member.type === 2)
+        return visibility.includes('Retailer')
+      else
+        return visibility.includes('Electrician')
+    })
+  }
 })
 </script>
 
 <template>
-  <div class="flex items-center justify-between">
-    <div class="ml-10 my-3">
-      <el-upload
-        class="avatar-uploader"
-        :data="{ member_id: member.id }"
-        action="https://avesh.netserve.in/member/photo"
-        :show-file-list="false"
-        :on-success="handleAvatarSuccess"
-        :before-upload="beforeAvatarUpload"
-        :on-progress="progress"
-      >
-        <img v-if="profilePic" :src="profilePic" class="avatar">
-        <el-icon v-else class="avatar-uploader-icon">
-          <Plus />
-        </el-icon>
-      </el-upload>
-      <el-progress v-if="uploading > 0" :percentage="uploading" status="success" />
-      <h2 class="text-xl font-bold text-gray-800 transition-colors duration-300 transform dark:text-white lg:text-3xl hover:text-gray-700 dark:hover:text-gray-300">
-        {{ member?.firm_title }} <span><el-button :icon="Edit" text /></span>
-      </h2>
-    </div>
-    <div class="mr-10 my-3">
-      <span class="text-blue-400 italic ml-10">Available Points: </span><span class="font-bold">{{ member.points_aggregate }}</span>
-    </div>
+  <div class="ml-10 my-3">
+    <el-upload
+      class="avatar-uploader"
+      :data="{ member_id: member.id }"
+      action="https://avesh.netserve.in/member/photo"
+      :show-file-list="false"
+      :on-success="handleAvatarSuccess"
+      :before-upload="beforeAvatarUpload"
+      :on-progress="progress"
+    >
+      <img v-if="profilePic" :src="profilePic" class="avatar">
+      <el-icon v-else class="avatar-uploader-icon">
+        <Plus />
+      </el-icon>
+    </el-upload>
+    <el-progress v-if="uploading > 0" :percentage="uploading" status="success" />
+    <h2 class="text-xl font-bold text-gray-800 transition-colors duration-300 transform lg:text-3xl hover:text-gray-700 dark:hover:text-gray-300">
+      {{ member?.firm_title }} <span><el-button :icon="Edit" text /></span>
+    </h2>
   </div>
-  <div class="m-10">
-    <h2 class="font-bold text-lg border-b-2 border-blue-900">Profile</h2>
-    <p>Contact Person: {{ member?.full_name }}</p>
-    <p>Aadhar No: {{ member?.aadhar }}</p>
-    <p>Date of Birth: {{ member?.dob }}</p>
-    <p>Contact No.: {{ member?.contact_no }}</p>
-    <p>Email Id: {{ member?.email }}</p>
-    <p>Full Address: {{ member?.full_address }}</p>
-    <p>City/Town: {{ member?.city }}</p>
+  <div class="flex items-stretch gap-2">
+    <div class="w-1/2 px-10">
+      <h2 class="font-bold text-lg border-b-2 border-blue-900">
+        Profile
+      </h2>
+      <p>Contact Person: {{ member?.full_name }}</p>
+      <p>Aadhar No: {{ member?.aadhar }}</p>
+      <p>Date of Birth: {{ member?.dob }}</p>
+      <p>Contact No.: {{ member?.contact_no }}</p>
+      <p>Email Id: {{ member?.email }}</p>
+      <p>Full Address: {{ member?.full_address }}</p>
+      <p>City/Town: {{ member?.city }}</p>
+      <p><span class="text-blue-800 italic">Available Points: </span><span class="text-blue-800 font-bold">{{ member.points_aggregate }}</span></p>
+    </div>
+    <div class="text-left w-1/2 px-10">
+      <h2 class="font-bold text-lg border-b-2 border-blue-900">
+        Documents
+      </h2>
+      <div v-if="docs">
+        <div v-for="doc in docs" :key="doc.id">
+          <a :href="doc.url" target="_blank"><el-icon :size="20" color="blue"><DocumentCopy /></el-icon> {{ doc.type }} - {{ doc.description }}</a>
+        </div>
+      </div>
+      <h2 class="font-bold text-lg border-b-2 border-blue-900">
+        New Updates
+      </h2>
+      <div v-if="updates">
+        <div v-for="up in updates" :key="up.id" class="flex items-stretch gap-2">
+          <div>
+            <el-image style="width: 100px; height: 100px" :src="up.images[0].url" fit="cover" />
+          </div>
+          <div class="w-3/4">
+            <p>{{ up.title }}</p>
+            <p>{{ up.description }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   <div class="px-10">
     <h2 class="font-bold py-4">

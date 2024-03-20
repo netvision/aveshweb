@@ -338,7 +338,7 @@ onMounted(async () => {
     <main v-if="member?.type === 0" class="flex-1 bg-gray-100 p-4">
       <div class="flex items-center justify-between">
         <div class="ml-10 my-3">
-          <h2 class="text-xl font-bold text-gray-800 transition-colors duration-300 transform dark:text-white lg:text-3xl hover:text-gray-700 dark:hover:text-gray-300">
+          <h2 class="text-xl font-bold text-gray-800 transition-colors duration-300 transform lg:text-3xl hover:text-gray-700 dark:hover:text-gray-300">
             Admin Panel
           </h2>
         </div>
@@ -868,6 +868,7 @@ onMounted(async () => {
     <aside v-if="member.type === 0" class="w-1/3 bg-gray-200 p-4">
       <NewUpdates />
       <Uploads />
+      <Birthdays />
     </aside>
   </div>
 </template>
