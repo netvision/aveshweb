@@ -119,9 +119,9 @@ onMounted(async () => {
       </el-row>
       <el-form-item label="Visibility">
         <el-checkbox-group v-model="visibility">
-          <el-checkbox label="Distributor" value="1" true-value="1" />
-          <el-checkbox label="Retailer" value="2" true-value="2" />
-          <el-checkbox label="Electrician" value="3" true-value="3" />
+          <el-checkbox label="Distributor" value="1" />
+          <el-checkbox label="Retailer" value="2" />
+          <el-checkbox label="Electrician" value="3" />
         </el-checkbox-group>
       </el-form-item>
     </el-form>

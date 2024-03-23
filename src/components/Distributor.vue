@@ -112,65 +112,6 @@ const savePoints = async () => {
   location.reload()
 }
 
-const editTrModal = ref(false)
-const transaction = ref({})
-const openEditTrModal = (row) => {
-  editTrModal.value = true
-  transaction.value = row
-}
-
-const editTr = async (trn) => {
-  const transactions = await axios.get(`https://avesh.netserve.in/points?filter[ref_id][eq]=${trn.ref_id}`).then(r => r.data)
-  if (transactions.length > 0) {
-    const promises = []
-    transactions.forEach((tr) => {
-      const data = {
-        date: trn.date,
-        invoice_no: trn.invoice_no,
-        invoice_amount: trn.invoice_amount,
-        invoice_date: trn.invoice_date,
-        other_info: trn.other_info,
-      }
-      promises.push(axios.patch(`https://avesh.netserve.in/points/${tr.id}`, data))
-    })
-    Promise.allSettled(promises).then(res => console.log(res))
-    alert('Updated!!')
-    location.reload()
-  }
-}
-
-const delTrModal = ref(false)
-const openDelTrModal = (row) => {
-  delTrModal.value = true
-  transaction.value = row
-}
-
-const delTr = async (trs) => {
-  const transactions = await axios.get(`https://avesh.netserve.in/points?expand=member&filter[ref_id][eq]=${trs.ref_id}`).then(r => r.data)
-  if (confirm('Are you sure?')) {
-    if (transactions.length > 0) {
-      transactions.forEach((tr) => {
-        const promises = []
-        let data = {}
-        if (tr.type === 'c') {
-          if (tr.member.type === 1)
-            data = { points_aggregate: tr.member.points_aggregate - tr.point, points_available: tr.member.points_available - tr.point }
-          else
-            data = { points_aggregate: tr.member.points_aggregate - tr.point }
-        }
-        else if (tr.type === 'r') { data = { points_available: tr.member.points_available + tr.point } }
-        else { data = { points_aggregate: tr.member.points_aggregate + tr.point } }
-
-        promises.push(axios.patch(`https://avesh.netserve.in/members/${tr.member.id}`, data))
-        promises.push(axios.patch(`https://avesh.netserve.in/points/${tr.id}`, { is_deleted: 1, del_reason: trs.del_reason }))
-        Promise.allSettled(promises).then(res => console.log(res))
-      })
-    }
-    alert('Deleted!')
-    location.reload()
-  }
-}
-
 const handleAvatarSuccess = (response, uploadFile) => {
   profilePic.value = URL.createObjectURL(uploadFile.raw)
 }
@@ -321,38 +262,7 @@ onMounted(async () => {
   <div class="px-10">
     <el-tabs v-model="activeTab" class="demo-tabs">
       <el-tab-pane label="Points Log" name="points">
-        <el-table :data="points" border style="width:100%">
-          <el-table-column prop="date" label="Date" />
-          <el-table-column prop="point" label="Point">
-            <template #default="scope">
-              <div v-if="scope.row.is_deleted" class="line-through text-black">
-                <span v-if="scope.row.type === 'c'" class="text-green-500 font-bold">{{ scope.row.point }}</span>
-                <span v-else-if="scope.row.type === 'r'" class="text-blue-500 font-bold">{{ scope.row.point }}</span>
-                <span v-else class="text-red-500 font-bold">{{ scope.row.point }}</span>
-              </div>
-              <div v-else>
-                <span v-if="scope.row.type === 'c'" class="text-green-500 font-bold">{{ scope.row.point }}</span>
-                <span v-else-if="scope.row.type === 'r'" class="text-blue-500 font-bold">{{ scope.row.point }}</span>
-                <span v-else class="text-red-500 font-bold">{{ scope.row.point }}</span>
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column label="Point">
-            <template #default="scope">
-              <span v-if="scope.row.type === 'c'" class="text-green-500 font-bold">Credit</span>
-              <span v-else-if="scope.row.type === 'r'" class="text-blue-500 font-bold">Retailer</span>
-              <span v-else class="text-red-500 font-bold">Debit</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="invoice_no" label="Invoice No" />
-          <el-table-column prop="invoice_date" label="Invoice Date" />
-          <el-table-column prop="invoice_amount" label="Amount" />
-          <el-table-column prop="other_info" label="Info" />
-          <el-table-column label="Running Balance">
-            <el-table-column prop="ag" label="Aggregate" />
-            <el-table-column prop="av" label="Available" />
-          </el-table-column>
-        </el-table>
+        <PointsLog :member="member" />
       </el-tab-pane>
       <el-tab-pane label="Retailers" name="retailers">
         <el-table :data="retailers" style="width:100%" border>
@@ -396,54 +306,7 @@ onMounted(async () => {
     <h2 class="font-bold py-5">
       Points History
     </h2>
-    <el-table :data="pointsLog" border style="width:100%">
-      <el-table-column prop="date" label="Date" />
-      <el-table-column prop="point" label="Point">
-        <template #default="scope">
-          <div v-if="scope.row.is_deleted" class="line-through text-black">
-            <span v-if="scope.row.type === 'c'" class="text-green-500 font-bold">{{ scope.row.point }}</span>
-            <span v-else-if="scope.row.type === 'r'" class="text-blue-500 font-bold">{{ scope.row.point }}</span>
-            <span v-else class="text-red-500 font-bold">{{ scope.row.point }}</span>
-          </div>
-          <div v-else>
-            <span v-if="scope.row.type === 'c'" class="text-green-500 font-bold">{{ scope.row.point }}</span>
-            <span v-else-if="scope.row.type === 'r'" class="text-blue-500 font-bold">{{ scope.row.point }}</span>
-            <span v-else class="text-red-500 font-bold">{{ scope.row.point }}</span>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column label="Point">
-        <template #default="scope">
-          <span v-if="scope.row.type === 'c'" class="text-green-500 font-bold">Credit</span>
-          <span v-else-if="scope.row.type === 'r'" class="text-blue-500 font-bold">Retailer</span>
-          <span v-else class="text-red-500 font-bold">Debit</span>
-        </template>
-      </el-table-column>
-      <el-table-column prop="invoice_no" label="Invoice No" />
-      <el-table-column prop="invoice_date" label="Invoice Date" />
-      <el-table-column prop="invoice_amount" label="Amount" />
-      <el-table-column prop="other_info" label="Info" />
-      <el-table-column label="Running Balance">
-        <el-table-column prop="ag" label="Aggregate" />
-        <el-table-column v-if="userInfo.type === 1" prop="av" label="Available" />
-      </el-table-column>
-      <el-table-column fixed="right" label="Operations" width="50">
-        <template #default="scope">
-          <div v-if="!scope.row.is_deleted">
-            <el-button link type="primary" size="small" @click="openEditTrModal(scope.row)">
-              <el-icon :size="15">
-                <Edit />
-              </el-icon>
-            </el-button>
-            <el-button link type="primary" size="small" @click="openDelTrModal(scope.row)">
-              <el-icon :size="15">
-                <Delete />
-              </el-icon>
-            </el-button>
-          </div>
-        </template>
-      </el-table-column>
-    </el-table>
+    <PointsLog :member="userInfo" :op="true" />
   </el-dialog>
 
   <el-dialog

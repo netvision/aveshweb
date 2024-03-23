@@ -47,10 +47,14 @@ declare module '@vue/runtime-core' {
     Footer: typeof import('./src/components/Footer.vue')['default']
     Header: typeof import('./src/components/Header.vue')['default']
     NewUpdates: typeof import('./src/components/NewUpdates.vue')['default']
+    PointsLog: typeof import('./src/components/PointsLog.vue')['default']
     Retailer: typeof import('./src/components/Retailer.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     StudentLeftMenu: typeof import('./src/components/StudentLeftMenu.vue')['default']
     Uploads: typeof import('./src/components/Uploads.vue')['default']
+  }
+  export interface ComponentCustomProperties {
+    vLoading: typeof import('element-plus/es')['ElLoadingDirective']
   }
 }

@@ -4,7 +4,6 @@ import axios from 'axios'
 import { DocumentCopy, Edit } from '@element-plus/icons-vue'
 const props = defineProps(['member'])
 const member = ref(props.member)
-const points = ref([])
 const profilePic = ref()
 const timestamp = new Date().getTime()
 const uploading = ref(0)
@@ -51,25 +50,6 @@ onMounted(async () => {
       else
         profilePic.value = ''
     })
-  points.value = await axios.get(`https://avesh.netserve.in/points?filter[member_id][eq]=${member.value.id}`).then(r => r.data)
-  let av = 0
-  let ag = 0
-  points.value.forEach((point) => {
-    if (point.is_deleted === 0) {
-      if (point.type === 'c') {
-        av += point.point
-        ag += point.point
-      }
-      else if (point.type === 'r') {
-        av -= point.point
-      }
-      else {
-        ag -= point.point
-      }
-      point.av = av
-      point.ag = ag
-    }
-  })
   const ups = await axios.get('https://avesh.netserve.in/new-updates').then(r => r.data)
   if (ups.length > 0) {
     updates.value = ups.filter((up) => {
@@ -161,34 +141,6 @@ onMounted(async () => {
     <h2 class="font-bold py-4">
       Points History
     </h2>
-    <el-table :data="points" border style="width:100%">
-      <el-table-column prop="date" label="Date" />
-      <el-table-column prop="point" label="Point">
-        <template #default="scope">
-          <div v-if="scope.row.is_deleted" class="line-through text-black">
-            <span v-if="scope.row.type === 'c'" class="text-green-500 font-bold">{{ scope.row.point }}</span>
-            <span v-else-if="scope.row.type === 'r'" class="text-blue-500 font-bold">{{ scope.row.point }}</span>
-            <span v-else class="text-red-500 font-bold">{{ scope.row.point }}</span>
-          </div>
-          <div v-else>
-            <span v-if="scope.row.type === 'c'" class="text-green-500 font-bold">{{ scope.row.point }}</span>
-            <span v-else-if="scope.row.type === 'r'" class="text-blue-500 font-bold">{{ scope.row.point }}</span>
-            <span v-else class="text-red-500 font-bold">{{ scope.row.point }}</span>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column label="Point">
-        <template #default="scope">
-          <span v-if="scope.row.type === 'c'" class="text-green-500 font-bold">Credit</span>
-          <span v-else-if="scope.row.type === 'r'" class="text-blue-500 font-bold">Retailer</span>
-          <span v-else class="text-red-500 font-bold">Debit</span>
-        </template>
-      </el-table-column>
-      <el-table-column prop="invoice_no" label="Invoice No" />
-      <el-table-column prop="invoice_date" label="Invoice Date" />
-      <el-table-column prop="invoice_amount" label="Amount" />
-      <el-table-column prop="other_info" label="Info" />
-      <el-table-column prop="ag" label="Balance" />
-    </el-table>
+    <PointsLog :member="member" />
   </div>
 </template>
