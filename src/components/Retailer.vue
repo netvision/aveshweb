@@ -69,9 +69,9 @@ onMounted(async () => {
     docs.value = uploads.filter((up) => {
       const visibility = up.visibility.split(',')
       if (member.type === 2)
-        return visibility.includes('Retailer')
+        return visibility.includes('2')
       else
-        return visibility.includes('Electrician')
+        return visibility.includes('3')
     })
   }
 })
