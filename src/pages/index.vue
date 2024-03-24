@@ -443,8 +443,9 @@ onMounted(async () => {
           Electricians
         </h2>
         <el-table :data="electricians" style="width:100%" border>
-          <el-table-column prop="firm_title" label="Name of Firm" />
           <el-table-column prop="full_name" label="contact Person" />
+          <el-table-column prop="full_address" label="Address" />
+          <el-table-column prop="city" label="City" />
           <el-table-column prop="contact_no" label="Phone No." />
           <el-table-column prop="points_aggregate" label="Points" />
           <el-table-column fixed="right" label="Operations" width="120">
