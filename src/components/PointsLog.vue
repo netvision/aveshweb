@@ -255,7 +255,7 @@ onMounted(async () => {
   >
     <el-divider />
     <h2 class="font-bold">
-      {{ transaction }}
+      Delete Transaction
     </h2>
     <el-divider />
     <el-form ref="delTrFormRef" :model="transaction" label-width="120px" status-icon label-position="top">

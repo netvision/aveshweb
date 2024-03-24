@@ -55,9 +55,9 @@ onMounted(async () => {
     updates.value = ups.filter((up) => {
       const visibility = up.visibility.split(',')
       if (member.type === 2)
-        return visibility.includes('Retailer')
+        return visibility.includes('2')
       else
-        return visibility.includes('Electrician')
+        return visibility.includes('3')
     })
       .map((doc) => {
         return { ...doc, images: JSON.parse(doc.image_urls) }
@@ -121,15 +121,15 @@ onMounted(async () => {
           <a :href="doc.url" target="_blank"><el-icon :size="20" color="blue"><DocumentCopy /></el-icon> {{ doc.type }} - {{ doc.description }}</a>
         </div>
       </div>
-      <h2 class="font-bold text-lg border-b-2 border-blue-900">
+      <h2 class="font-bold text-lg border-b-2 border-blue-900 mt-5">
         New Updates
       </h2>
-      <div v-if="updates">
-        <div v-for="up in updates" :key="up.id" class="flex items-stretch gap-2">
-          <div>
-            <el-image style="width: 100px; height: 100px" :src="up.images[0].url" fit="cover" />
+      <div v-for="up in updates" :key="up.id" class="m-1 py-3">
+        <div class="flex gap-4">
+          <div class="w-1/2 h-28">
+            <Slider :images="up.images" />
           </div>
-          <div class="w-3/4">
+          <div class="w-1/2">
             <p>{{ up.title }}</p>
             <p>{{ up.description }}</p>
           </div>

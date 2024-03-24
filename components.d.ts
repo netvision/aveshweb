@@ -51,6 +51,7 @@ declare module '@vue/runtime-core' {
     Retailer: typeof import('./src/components/Retailer.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    Slider: typeof import('./src/components/Slider.vue')['default']
     StudentLeftMenu: typeof import('./src/components/StudentLeftMenu.vue')['default']
     Uploads: typeof import('./src/components/Uploads.vue')['default']
   }

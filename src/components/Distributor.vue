@@ -177,7 +177,7 @@ onMounted(async () => {
   if (ups.length > 0) {
     updates.value = ups.filter((up) => {
       const visibility = up.visibility.split(',')
-      return visibility.includes('Distributor')
+      return visibility.includes('1')
     })
       .map((doc) => {
         return { ...doc, images: JSON.parse(doc.image_urls) }
@@ -188,7 +188,7 @@ onMounted(async () => {
   if (uploads.length > 0) {
     docs.value = uploads.filter((up) => {
       const visibility = up.visibility.split(',')
-      return visibility.includes('Distributor')
+      return visibility.includes('1')
     })
   }
 })
@@ -243,15 +243,15 @@ onMounted(async () => {
           <a :href="doc.url" target="_blank"><el-icon :size="20" color="blue"><DocumentCopy /></el-icon> {{ doc.type }} - {{ doc.description }}</a>
         </div>
       </div>
-      <h2 class="font-bold text-lg border-b-2 border-blue-900">
+      <h2 class="font-bold text-lg border-b-2 border-blue-900 mt-5">
         New Updates
       </h2>
-      <div v-if="updates">
-        <div v-for="up in updates" :key="up.id" class="flex items-stretch gap-2">
-          <div v-if="up.images">
-            <el-image style="width: 100px; height: 100px" :src="up.images[0].url" fit="cover" />
+      <div v-for="up in updates" :key="up.id" class="m-1 py-3">
+        <div class="flex gap-4">
+          <div class="w-1/2 h-28">
+            <Slider :images="up.images" />
           </div>
-          <div class="w-3/4">
+          <div class="w-1/2">
             <p>{{ up.title }}</p>
             <p>{{ up.description }}</p>
           </div>
@@ -385,106 +385,6 @@ onMounted(async () => {
       </div>
     </template>
   </el-dialog>
-
-  <el-dialog
-    v-model="editTrModal"
-    title="Edit Transaction"
-    width="500"
-    align-center
-  >
-    <el-form ref="trFormRef" :model="transaction" label-width="120px" status-icon label-position="top">
-      <el-form-item label="">
-        <el-radio-group v-model="transaction.type" class="ml-4" disabled>
-          <el-radio label="c">
-            Credit
-          </el-radio>
-          <el-radio label="d">
-            Debit
-          </el-radio>
-        </el-radio-group>
-      </el-form-item>
-      <el-row :gutter="20">
-        <el-col :span="12">
-          <el-form-item label="Date">
-            <el-date-picker
-              v-model="transaction.date"
-              type="date"
-              placeholder="select date"
-              value-format="YYYY-MM-DD"
-            />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="Points">
-            <el-input v-model="transaction.point" type="number" disabled />
-          </el-form-item>
-        </el-col>
-      </el-row>
-      <el-row v-if="transaction.type !== 'd'" :gutter="20">
-        <el-col :span="8">
-          <el-form-item label="Invoice Date">
-            <el-date-picker
-              v-model="transaction.invoice_date"
-              type="date"
-              placeholder="select date"
-              value-format="YYYY-MM-DD"
-            />
-          </el-form-item>
-        </el-col>
-        <el-col :span="8">
-          <el-form-item label="Invoice No">
-            <el-input v-model="transaction.invoice_no" type="number" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="8">
-          <el-form-item label="Invoice Amount">
-            <el-input v-model="transaction.invoice_amount" type="number" />
-          </el-form-item>
-        </el-col>
-      </el-row>
-      <el-form-item label="Description">
-        <el-input v-model="transaction.other_info" type="text" />
-      </el-form-item>
-    </el-form>
-    <template #footer>
-      <div class="dialog-footer">
-        <el-button @click="editTrModal = false">
-          Cancel
-        </el-button>
-        <el-button type="primary" :disabled="isDisabled" plain @click="editTr(transaction)">
-          Edit
-        </el-button>
-      </div>
-    </template>
-  </el-dialog>
-
-  <el-dialog
-    v-model="delTrModal"
-    :title="userInfo.firm_title"
-    width="500"
-    align-center
-  >
-    <el-divider />
-    <h2 class="font-bold">
-      {{ transaction }}
-    </h2>
-    <el-divider />
-    <el-form ref="delTrFormRef" :model="transaction" label-width="120px" status-icon label-position="top">
-      <el-form-item label="Reason of Deletion">
-        <el-input v-model="transaction.del_reason" type="text" />
-      </el-form-item>
-    </el-form>
-    <template #footer>
-      <div class="dialog-footer">
-        <el-button @click="delTrModal = false">
-          Cancel
-        </el-button>
-        <el-button type="primary" :disabled="isDisabled" plain @click="delTr(transaction)">
-          Confirm Delete
-        </el-button>
-      </div>
-    </template>
-  </el-dialog>
 </template>
 
 <style>
@@ -513,5 +413,20 @@ onMounted(async () => {
   width: 80px;
   height: 80px;
   display: block;
+}
+.el-carousel__item h3 {
+  color: #475669;
+  opacity: 0.75;
+  line-height: 150px;
+  margin: 0;
+  text-align: center;
+}
+
+.el-carousel__item:nth-child(2n) {
+  background-color: #99a9bf;
+}
+
+.el-carousel__item:nth-child(2n + 1) {
+  background-color: #d3dce6;
 }
 </style>

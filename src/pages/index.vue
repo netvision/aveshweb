@@ -244,9 +244,10 @@ const savePoints = async () => {
     promises.push(axios.post('https://avesh.netserve.in/points', rPoint))
   }
   const res = await Promise.allSettled(promises)
-  console.log(res)
   pointsModal.value = false
-  location.reload()
+  setTimeout(() => {
+    location.reload()
+  }, 3000)
 }
 
 const getData = async (row, treeNode, resolve) => {
