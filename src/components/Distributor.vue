@@ -109,7 +109,9 @@ const savePoints = async () => {
   const res = await Promise.allSettled(promises)
   console.log(res)
   pointsModal.value = false
-  location.reload()
+  setTimeout(() => {
+    location.reload()
+  }, 3000)
 }
 
 const handleAvatarSuccess = (response, uploadFile) => {
