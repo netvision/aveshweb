@@ -42,6 +42,7 @@ async function checkUrlExists(url) {
 }
 
 onMounted(async () => {
+  console.log(member.value.type)
   checkUrlExists(`https://avesh.netserve.in/profile-photos/member-${member.value.id}.jpg`)
     .then((exists) => {
       if (exists)
@@ -54,7 +55,7 @@ onMounted(async () => {
   if (ups.length > 0) {
     updates.value = ups.filter((up) => {
       const visibility = up.visibility.split(',')
-      if (member.type === 2)
+      if (member.value.type === 2)
         return visibility.includes('2')
       else
         return visibility.includes('3')
@@ -68,7 +69,7 @@ onMounted(async () => {
   if (uploads.length > 0) {
     docs.value = uploads.filter((up) => {
       const visibility = up.visibility.split(',')
-      if (member.type === 2)
+      if (member.value.type === 2)
         return visibility.includes('2')
       else
         return visibility.includes('3')
@@ -79,27 +80,29 @@ onMounted(async () => {
 
 <template>
   <div class="ml-10 my-3">
-    <el-upload
-      class="avatar-uploader"
-      :data="{ member_id: member.id }"
-      action="https://avesh.netserve.in/member/photo"
-      :show-file-list="false"
-      :on-success="handleAvatarSuccess"
-      :before-upload="beforeAvatarUpload"
-      :on-progress="progress"
-    >
-      <img v-if="profilePic" :src="profilePic" class="avatar">
-      <el-icon v-else class="avatar-uploader-icon">
-        <Plus />
-      </el-icon>
-    </el-upload>
-    <el-progress v-if="uploading > 0" :percentage="uploading" status="success" />
     <h2 class="text-xl font-bold text-gray-800 transition-colors duration-300 transform lg:text-3xl hover:text-gray-700 dark:hover:text-gray-300">
       {{ member?.firm_title }} <span><el-button :icon="Edit" text /></span>
     </h2>
   </div>
   <div class="flex items-stretch gap-2">
-    <div class="w-1/2 px-10">
+    <div class="w-1/5 px-10">
+      <el-upload
+        class="avatar-uploader"
+        :data="{ member_id: member.id }"
+        action="https://avesh.netserve.in/member/photo"
+        :show-file-list="false"
+        :on-success="handleAvatarSuccess"
+        :before-upload="beforeAvatarUpload"
+        :on-progress="progress"
+      >
+        <img v-if="profilePic" :src="profilePic" class="avatar">
+        <el-icon v-else class="avatar-uploader-icon">
+          <Plus />
+        </el-icon>
+      </el-upload>
+      <el-progress v-if="uploading > 0" :percentage="uploading" status="success" />
+    </div>
+    <div class="w-2/5 px-10">
       <h2 class="font-bold text-lg border-b-2 border-blue-900">
         Profile
       </h2>
@@ -112,7 +115,7 @@ onMounted(async () => {
       <p>City/Town: {{ member?.city }}</p>
       <p><span class="text-blue-800 italic">Available Points: </span><span class="text-blue-800 font-bold">{{ member.points_aggregate }}</span></p>
     </div>
-    <div class="text-left w-1/2 px-10">
+    <div class="text-left w-2/5 px-10">
       <h2 class="font-bold text-lg border-b-2 border-blue-900">
         Documents
       </h2>
@@ -126,10 +129,10 @@ onMounted(async () => {
       </h2>
       <div v-for="up in updates" :key="up.id" class="m-1 py-3">
         <div class="flex gap-4">
-          <div class="w-1/2 h-28">
+          <div class="w-28 h-28">
             <Slider :images="up.images" />
           </div>
-          <div class="w-1/2">
+          <div>
             <p>{{ up.title }}</p>
             <p>{{ up.description }}</p>
           </div>

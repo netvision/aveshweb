@@ -41,11 +41,15 @@ onUnmounted(() => {
         <img :src="slide.url" :alt="slide.name" class="w-full h-28">
       </div>
     </div>
-    <button class="carousel-prev absolute bottom-0 left-0 ml-2 bg-gray-100 px-2 py-1" @click="prevSlide">
-      &lt;
+    <button class="carousel-prev absolute bottom-0 left-0 bg-slate-50/50" @click="prevSlide">
+      <el-icon>
+        <Back />
+      </el-icon>
     </button>
-    <button class="carousel-next absolute bottom-0 right-0 mr-2 bg-gray-100 px-2 py-1" @click="nextSlide">
-      &gt;
+    <button class="carousel-next absolute bottom-0 right-0 bg-slate-50/50" @click="nextSlide">
+      <el-icon>
+        <Right />
+      </el-icon>
     </button>
   </div>
 </template>
