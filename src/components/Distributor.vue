@@ -219,7 +219,7 @@ onMounted(async () => {
         :before-upload="beforeAvatarUpload"
         :on-progress="progress"
       >
-        <img v-if="profilePic" :src="profilePic">
+        <img v-if="profilePic" :src="profilePic" class="max-w-64">
         <el-icon v-else class="avatar-uploader-icon">
           <Plus />
         </el-icon>
