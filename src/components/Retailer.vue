@@ -84,8 +84,8 @@ onMounted(async () => {
       {{ member?.firm_title }} <span><el-button :icon="Edit" text /></span>
     </h2>
   </div>
-  <div class="flex items-stretch gap-2">
-    <div class="w-1/5 px-10">
+  <div class="md:flex items-stretch gap-2">
+    <div class="w-full md:w-1/5 px-10">
       <el-upload
         class="avatar-uploader"
         :data="{ member_id: member.id }"
@@ -102,7 +102,7 @@ onMounted(async () => {
       </el-upload>
       <el-progress v-if="uploading > 0" :percentage="uploading" status="success" />
     </div>
-    <div class="w-2/5 px-10">
+    <div class="w-full md:w-2/5 px-10">
       <h2 class="font-bold text-lg border-b-2 border-blue-900">
         Profile
       </h2>
@@ -115,7 +115,7 @@ onMounted(async () => {
       <p>City/Town: {{ member?.city }}</p>
       <p><span class="text-blue-800 italic">Available Points: </span><span class="text-blue-800 font-bold">{{ member.points_aggregate }}</span></p>
     </div>
-    <div class="text-left w-2/5 px-10">
+    <div class="text-left w-full md:w-2/5 px-10">
       <h2 class="font-bold text-lg border-b-2 border-blue-900">
         Documents
       </h2>

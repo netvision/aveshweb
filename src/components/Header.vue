@@ -72,8 +72,12 @@ onMounted(async () => {
                 </span>
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <el-dropdown-item @click="openPasswordModal">Change Password</el-dropdown-item>
-                    <el-dropdown-item @click="logout">Logout</el-dropdown-item>
+                    <el-dropdown-item @click="openPasswordModal">
+                      Change Password
+                    </el-dropdown-item>
+                    <el-dropdown-item @click="logout">
+                      Logout
+                    </el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
