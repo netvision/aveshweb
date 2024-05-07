@@ -3,7 +3,7 @@
 import axios from 'axios'
 import { useAuthStore } from '~/stores/authStore'
 const authStore = useAuthStore()
-const member = ref({})
+const member = ref(authStore.member)
 const passwordModal = ref(false)
 const formRef = ref()
 const pd = ref({})
@@ -72,6 +72,16 @@ onMounted(async () => {
                 </span>
                 <template #dropdown>
                   <el-dropdown-menu>
+                    <el-dropdown-item>
+                      <router-link v-if="member.type === 0" to="/">
+                        Admin Dashboard
+                      </router-link>
+                    </el-dropdown-item>
+                    <el-dropdown-item>
+                      <router-link v-if="member.type === 0" to="/website">
+                        Manage website
+                      </router-link>
+                    </el-dropdown-item>
                     <el-dropdown-item @click="openPasswordModal">
                       Change Password
                     </el-dropdown-item>

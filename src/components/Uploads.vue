@@ -30,6 +30,8 @@ const saveDoc = async () => {
     alert('Edited successfully')
   else
     alert('Try Again later')
+
+  console.log(newDoc.value)
   docModal.value = false
 }
 
@@ -92,7 +94,7 @@ onMounted(async () => {
       :limit="1"
       :on-success="handleUrl"
     >
-      <el-button type="primary">
+      <el-button type="primary" text>
         Click to select the Doc
       </el-button>
       <template #tip>

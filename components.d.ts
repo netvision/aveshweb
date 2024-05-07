@@ -8,6 +8,7 @@ export {}
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     Birthdays: typeof import('./src/components/Birthdays.vue')['default']
+    ContactInfo: typeof import('./src/components/ContactInfo.vue')['default']
     Counter: typeof import('./src/components/Counter.vue')['default']
     Distributor: typeof import('./src/components/Distributor.vue')['default']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
@@ -46,8 +47,11 @@ declare module '@vue/runtime-core' {
     ElUpload: typeof import('element-plus/es')['ElUpload']
     Footer: typeof import('./src/components/Footer.vue')['default']
     Header: typeof import('./src/components/Header.vue')['default']
+    Information: typeof import('./src/components/Information.vue')['default']
     NewUpdates: typeof import('./src/components/NewUpdates.vue')['default']
+    Pages: typeof import('./src/components/Pages.vue')['default']
     PointsLog: typeof import('./src/components/PointsLog.vue')['default']
+    Products: typeof import('./src/components/Products.vue')['default']
     Retailer: typeof import('./src/components/Retailer.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
