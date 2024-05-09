@@ -13,7 +13,7 @@ const activeTab = ref('first')
         Home Page Slides
       </el-tab-pane>
       <el-tab-pane label="Products" name="second">
-        <Products />
+        <Categories />
       </el-tab-pane>
       <el-tab-pane label="Information" name="fourth">
         <Information />
