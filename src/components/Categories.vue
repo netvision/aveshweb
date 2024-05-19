@@ -63,6 +63,10 @@ const openProductModal = (prod) => {
       imgs.value = JSON.parse(prod.img_urls)
     }
   }
+  else {
+    activeProduct.value = {}
+    imgs.value = []
+  }
   productModal.value = true
 }
 
