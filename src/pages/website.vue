@@ -21,6 +21,9 @@ const activeTab = ref('first')
       <el-tab-pane label="Contact &amp; Social Media" name="fifth">
         <ContactInfo />
       </el-tab-pane>
+      <el-tab-pane label="Feedbacks" name="sixth">
+        <Feedback />
+      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
