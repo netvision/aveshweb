@@ -51,6 +51,7 @@ declare module '@vue/runtime-core' {
     Footer: typeof import('./src/components/Footer.vue')['default']
     Header: typeof import('./src/components/Header.vue')['default']
     Information: typeof import('./src/components/Information.vue')['default']
+    NewsEvents: typeof import('./src/components/NewsEvents.vue')['default']
     NewUpdates: typeof import('./src/components/NewUpdates.vue')['default']
     Pages: typeof import('./src/components/Pages.vue')['default']
     PointsLog: typeof import('./src/components/PointsLog.vue')['default']

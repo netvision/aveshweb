@@ -17,6 +17,23 @@ const isDisabled = ref(false)
 const formRef = ref()
 const fileList = ref()
 
+const searchQ = ref('')
+const searchResult = ref([])
+
+const doSearch = async () => {
+  if (searchQ.value.length > 2) {
+    const data = await axios.get(`https://avesh.netserve.in/members?filter[full_name][like]=${searchQ.value}`).then(r => r.data)
+    const data1 = await axios.get(`https://avesh.netserve.in/members?filter[firm_title][like]=${searchQ.value}`).then(r => r.data)
+    const joined = data.concat(data1)
+    searchResult.value = joined.filter((item, index, self) =>
+      index === self.findIndex(t => t.id === item.id),
+    )
+  }
+  else {
+    searchResult.value = []
+  }
+}
+
 const form = reactive({
   type: '',
   email: '',
@@ -200,8 +217,11 @@ const openMemberModal = async (member) => {
 }
 const closeMemberModal = () => {
   userInfo.value = {}
+  searchQ.value = ''
   memberModal.value = false
 }
+
+const getMember = row => openMemberModal(row)
 
 const pointsModal = ref(false)
 const points = ref({})
@@ -251,11 +271,11 @@ const savePoints = async () => {
 }
 
 const getData = async (row, treeNode, resolve) => {
-  resolve (await axios.get(`https://avesh.netserve.in/members?filter[distributor_id][eq]=${row.id}`).then(r => r.data))
+  resolve (await axios.get(`https://avesh.netserve.in/members?filter[distributor_id][eq]=${row.id}&sort=-points_aggregate`).then(r => r.data))
 }
 
 onMounted(async () => {
-  const dist = await axios.get('https://avesh.netserve.in/members?filter[type][eq]=1').then(res => res.data)
+  const dist = await axios.get('https://avesh.netserve.in/members?filter[type][eq]=1&sort=-points_aggregate').then(res => res.data)
   distributors.value = dist.map(d => ({
     ...d,
     children: [],
@@ -268,7 +288,7 @@ onMounted(async () => {
       label: e.firm_title,
     })
   })
-  electricians.value = await axios.get('https://avesh.netserve.in/members?filter[type][eq]=3').then(res => res.data)
+  electricians.value = await axios.get('https://avesh.netserve.in/members?filter[type][eq]=3&sort=-points_aggregate').then(res => res.data)
   member.value = await authStore.member
 })
 </script>
@@ -282,6 +302,16 @@ onMounted(async () => {
           <h2 class="text-xl font-bold text-gray-800 transition-colors duration-300 transform lg:text-3xl hover:text-gray-700 dark:hover:text-gray-300">
             Admin Panel
           </h2>
+        </div>
+        <div class="ml-10 my-3 relative">
+          <el-input v-model="searchQ" placeholder="Search members" clearable @input="doSearch" />
+          <div v-if="searchResult.length > 0" class="absolute z-50 top-9 left-0 border-2 border-gray-300 shadow-md">
+            <el-table :data="searchResult" style="width: 100%" @row-click="getMember">
+              <el-table-column prop="full_name" label="Name" />
+              <el-table-column prop="firm_title" label="Firm" />
+              <el-table-column prop="contact_no" label="Phone" />
+            </el-table>
+          </div>
         </div>
         <div class="mr-10 my-3">
           <div class="text-right p-5">
@@ -395,8 +425,8 @@ onMounted(async () => {
           </el-dialog>
         </div>
       </div>
-      <div class="w-full p-10 mb-10">
-        <h2 class="font-bold">
+      <div class="w-full px-10 mb-5">
+        <h2 class="font-bold text-lg p-2">
           Distributors and Retailers
         </h2>
         <el-table
@@ -438,8 +468,8 @@ onMounted(async () => {
           </el-table-column>
         </el-table>
       </div>
-      <div class="w-full p-10">
-        <h2 class="font-bold">
+      <div class="w-full px-10">
+        <h2 class="font-bold text-lg p-2">
           Electricians
         </h2>
         <el-table :data="electricians" style="width:100%" border>
