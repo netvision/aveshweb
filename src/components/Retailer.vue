@@ -1,10 +1,12 @@
+<!-- eslint-disable no-alert -->
 <!-- eslint-disable no-console -->
 <script setup>
 import axios from 'axios'
 import { DocumentCopy, Edit } from '@element-plus/icons-vue'
 const props = defineProps(['member'])
 const member = ref(props.member)
-const profilePic = ref()
+const profilePic = ref(`https://avesh.netserve.in/profile-photos/member-${member.value.id}.jpg?timestamp=${new Date().getTime()}`)
+const placeholder = ref('https://avesh.netserve.in/profile-photos/member-36.jpg')
 const timestamp = new Date().getTime()
 const uploading = ref(0)
 const docs = ref()
@@ -30,27 +32,11 @@ const progress = (e, file, files) => {
   uploading.value = e.percent || 0
 }
 
-async function checkUrlExists(url) {
-  try {
-    const response = await axios.head(url)
-    return response.status === 200 // Check if the status is 200 OK
-  }
-  catch (error) {
-    console.error('Error checking URL:', error)
-    return false // Assume URL doesn't exist in case of error
-  }
+function onProfileError(e) {
+  e.target.src = placeholder.value
 }
 
 onMounted(async () => {
-  console.log(member.value.type)
-  checkUrlExists(`https://avesh.netserve.in/profile-photos/member-${member.value.id}.jpg`)
-    .then((exists) => {
-      if (exists)
-        profilePic.value = `https://avesh.netserve.in/profile-photos/member-${member.value.id}.jpg`
-
-      else
-        profilePic.value = ''
-    })
   const ups = await axios.get('https://avesh.netserve.in/new-updates').then(r => r.data)
   if (ups.length > 0) {
     updates.value = ups.filter((up) => {
@@ -95,10 +81,7 @@ onMounted(async () => {
         :before-upload="beforeAvatarUpload"
         :on-progress="progress"
       >
-        <img v-if="profilePic" :src="profilePic" class="max-w-64">
-        <el-icon v-else class="avatar-uploader-icon">
-          <Plus />
-        </el-icon>
+        <img :src="profilePic" class="max-w-64" @error="onProfileError">
       </el-upload>
       <el-progress v-if="uploading > 0" :percentage="uploading" status="success" />
     </div>
