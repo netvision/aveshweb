@@ -195,25 +195,6 @@ const openMemberModal = async (member) => {
   pointsLog.value = []
   memberModal.value = true
   userInfo.value = member
-  const available = ref(0)
-  const aggregate = ref(0)
-  pointsLog.value = await axios.get(`https://avesh.netserve.in/points?filter[member_id][eq]=${userInfo.value.id}`).then(r => r.data)
-  pointsLog.value.forEach((point) => {
-    if (!point.is_deleted) {
-      if (point.type === 'c') {
-        available.value += point.point
-        aggregate.value += point.point
-      }
-      else if (point.type === 'r') {
-        available.value -= point.point
-      }
-      else {
-        aggregate.value -= point.point
-      }
-    }
-    point.av = available.value
-    point.ag = aggregate.value
-  })
 }
 const closeMemberModal = () => {
   userInfo.value = {}

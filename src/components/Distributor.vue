@@ -63,7 +63,7 @@ const openMemberModal = async (member) => {
       point.av = available.value
       point.ag = aggregate.value
     }
-  })
+  }).sort((a, b) => new Date(b.date) - new Date(a.date))
 }
 const closeMemberModal = () => {
   userInfo.value = {}

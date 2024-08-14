@@ -93,6 +93,7 @@ watch(() => props.member, async (newValue, oldValue) => {
           point.ag = ag
         }
       })
+      points.value.sort((a, b) => b.id - a.id)
     }
     catch (error) {
       console.error('Error fetching data:', error)
@@ -104,6 +105,7 @@ watch(() => props.member, async (newValue, oldValue) => {
 })
 onMounted(async () => {
   points.value = await axios.get(`https://avesh.netserve.in/points?filter[member_id][eq]=${props.member.id}`).then(r => r.data)
+  console.log(points.value)
   let av = 0
   let ag = 0
   points.value.forEach((point) => {
@@ -122,12 +124,17 @@ onMounted(async () => {
       point.ag = ag
     }
   })
+  points.value.sort((a, b) => new Date(b.date) - new Date(a.date))
 })
 </script>
 
 <template>
   <el-table v-loading="loading" :data="points" border style="width:100%">
-    <el-table-column prop="date" label="Date" />
+    <el-table-column prop="date" label="Date">
+      <template #default="scope">
+        {{ new Date(scope.row.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(',', '') }}
+      </template>
+    </el-table-column>
     <el-table-column prop="point" label="Point">
       <template #default="scope">
         <div v-if="scope.row.is_deleted" class="line-through text-black">
@@ -150,7 +157,11 @@ onMounted(async () => {
       </template>
     </el-table-column>
     <el-table-column prop="invoice_no" label="Invoice No" />
-    <el-table-column prop="invoice_date" label="Invoice Date" />
+    <el-table-column prop="invoice_date" label="Invoice Date">
+      <template #default="scope">
+        {{ new Date(scope.row.invoice_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(',', '') }}
+      </template>
+    </el-table-column>
     <el-table-column prop="invoice_amount" label="Amount" />
     <el-table-column prop="other_info" label="Info" />
     <el-table-column label="Running Balance">
