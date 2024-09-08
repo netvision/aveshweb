@@ -9,6 +9,7 @@ declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     Birthdays: typeof import('./src/components/Birthdays.vue')['default']
     Categories: typeof import('./src/components/Categories.vue')['default']
+    Complaint: typeof import('./src/components/Complaint.vue')['default']
     ContactInfo: typeof import('./src/components/ContactInfo.vue')['default']
     Counter: typeof import('./src/components/Counter.vue')['default']
     Distributor: typeof import('./src/components/Distributor.vue')['default']
