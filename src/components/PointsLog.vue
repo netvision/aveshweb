@@ -114,6 +114,10 @@ onMounted(async () => {
         av += point.point
         ag += point.point
       }
+      else if (point.type === 'b') {
+        av += point.point
+        ag += point.point
+      }
       else if (point.type === 'r') {
         av -= point.point
       }
@@ -140,11 +144,13 @@ onMounted(async () => {
         <div v-if="scope.row.is_deleted" class="line-through text-black">
           <span v-if="scope.row.type === 'c'" class="text-green-500 font-bold">{{ scope.row.point }}</span>
           <span v-else-if="scope.row.type === 'r'" class="text-blue-500 font-bold">{{ scope.row.point }}</span>
+          <span v-else-if="scope.row.type === 'b'" class="text-blue-500 font-bold">{{ scope.row.point }}</span>
           <span v-else class="text-red-500 font-bold">{{ scope.row.point }}</span>
         </div>
         <div v-else>
           <span v-if="scope.row.type === 'c'" class="text-green-500 font-bold">{{ scope.row.point }}</span>
           <span v-else-if="scope.row.type === 'r'" class="text-blue-500 font-bold">{{ scope.row.point }}</span>
+          <span v-else-if="scope.row.type === 'b'" class="text-blue-500 font-bold">{{ scope.row.point }}</span>
           <span v-else class="text-red-500 font-bold">{{ scope.row.point }}</span>
         </div>
       </template>
@@ -153,6 +159,7 @@ onMounted(async () => {
       <template #default="scope">
         <span v-if="scope.row.type === 'c'" class="text-green-500 font-bold">Credit</span>
         <span v-else-if="scope.row.type === 'r'" class="text-blue-500 font-bold">Retailer</span>
+        <span v-else-if="scope.row.type === 'b'" class="text-blue-500 font-bold">Bonus</span>
         <span v-else class="text-red-500 font-bold">Debit</span>
       </template>
     </el-table-column>

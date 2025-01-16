@@ -12,13 +12,14 @@ const delFeed = async (id) => {
 }
 
 onMounted(async () => {
-  feeds.value = await axios.get('https://avesh.netserve.in/complaints?sort=-id').then(r => r.data)
+  feeds.value = await axios.get('https://avesh.netserve.in/complaints?sort=-cur_date').then(r => r.data)
 })
 </script>
 
 <template>
   <h2>Complaints</h2>
   <el-table :data="feeds" style="width: 100%">
+    <el-table-column prop="cur_date" label="Date" />
     <el-table-column prop="name" label="Name" />
     <el-table-column prop="mobile" label="Mobile No" />
     <el-table-column prop="alt_mobile" label="Alt Mobile" />

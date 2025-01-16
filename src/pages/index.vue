@@ -237,12 +237,19 @@ const savePoints = async () => {
     rPoint.type = 'c'
     promises.push(axios.post('https://avesh.netserve.in/points', rPoint))
   }
-  else {
+  else if (points.value.type === 'r') {
     const userData = { points_aggregate: userInfo.value.points_aggregate - Number(points.value.point) }
     promises.push(axios.patch(`https://avesh.netserve.in/members/${userInfo.value.id}`, userData))
     const rPoint = points.value
     rPoint.member_id = userInfo.value.id
     promises.push(axios.post('https://avesh.netserve.in/points', rPoint))
+  }
+  else {
+    const userData = { points_aggregate: userInfo.value.points_aggregate + Number(points.value.point) }
+    promises.push(axios.patch(`https://avesh.netserve.in/members/${userInfo.value.id}`, userData))
+    const bPoint = points.value
+    bPoint.member_id = userInfo.value.id
+    promises.push(axios.post('https://avesh.netserve.in/points', bPoint))
   }
   const res = await Promise.allSettled(promises)
   pointsModal.value = false
@@ -609,6 +616,9 @@ onMounted(async () => {
             <el-radio-group v-model="points.type" class="ml-4">
               <el-radio label="c">
                 Credit
+              </el-radio>
+              <el-radio label="b">
+                Bonus
               </el-radio>
               <el-radio label="d">
                 Redemption
