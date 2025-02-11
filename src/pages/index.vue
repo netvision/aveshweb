@@ -237,7 +237,7 @@ const savePoints = async () => {
     rPoint.type = 'c'
     promises.push(axios.post('https://avesh.netserve.in/points', rPoint))
   }
-  else if (points.value.type === 'r') {
+  else if (points.value.type === 'd') {
     const userData = { points_aggregate: userInfo.value.points_aggregate - Number(points.value.point) }
     promises.push(axios.patch(`https://avesh.netserve.in/members/${userInfo.value.id}`, userData))
     const rPoint = points.value
