@@ -6,7 +6,7 @@ import { DocumentCopy, Edit } from '@element-plus/icons-vue'
 const props = defineProps(['member'])
 const member = ref(props.member)
 const profilePic = ref(`https://avesh.netserve.in/profile-photos/member-${member.value.id}.jpg?timestamp=${new Date().getTime()}`)
-const placeholder = ref('https://avesh.netserve.in/profile-photos/member-36.jpg')
+const placeholder = ref('https://avesh.netserve.in/profile-photos/placeholder.jpg')
 const timestamp = new Date().getTime()
 const uploading = ref(0)
 const docs = ref()
