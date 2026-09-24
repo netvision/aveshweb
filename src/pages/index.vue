@@ -2,11 +2,9 @@
 <!-- eslint-disable eqeqeq -->
 <!-- eslint-disable no-console -->
 <script setup>
-import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth'
 import axios from 'axios'
 import { useAuthStore } from '~/stores/authStore'
 const authStore = useAuthStore()
-const auth = getAuth()
 const electricians = ref([])
 const retailers = ref([])
 const distributors = ref([])

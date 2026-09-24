@@ -5,34 +5,16 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import { createPinia } from 'pinia'
 import { createRouter, createWebHistory } from 'vue-router'
 import routes from 'virtual:generated-pages'
-import { initializeApp } from 'firebase/app'
-import { getAuth, onAuthStateChanged } from 'firebase/auth'
 import App from './App.vue'
 import './style.css'
+import axios from 'axios'
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_APIKEY,
-  authDomain: import.meta.env.VITE_AUTHDOMAIN,
-  projectId: import.meta.env.VITE_PROJECTID,
-  storageBucket: import.meta.env.VITE_STORAGEBUCKET,
-  messagingSenderId: import.meta.env.VITE_MESSAGINGSENDERID,
-  appId: import.meta.env.VITE_APPID,
-}
-
-initializeApp(firebaseConfig)
-
-const getCurrentUser = () => {
-  return new Promise((resolve, reject) => {
-    const removeListener = onAuthStateChanged(
-      getAuth(),
-      (user) => {
-        removeListener()
-        resolve(user)
-      },
-      reject,
-    )
-  })
-}
+axios.interceptors.request.use((config) => {
+  const token = localStorage.getItem('aveshToken')
+  if (token)
+    config.headers.Authorization = `Bearer ${token}`
+  return config
+})
 
 const pinia = createPinia()
 const app = createApp(App)
@@ -46,7 +28,7 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   if (to.meta.requireAuth) {
-    if (await getCurrentUser())
+    if (localStorage.getItem('aveshToken'))
       next()
     else
       next('/login')

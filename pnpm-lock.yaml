@@ -23,9 +23,6 @@ importers:
       element-plus:
         specifier: ^2.5.5
         version: 2.5.5(vue@3.3.4)
-      firebase:
-        specifier: ^9.10.0
-        version: 9.10.0
       google-spreadsheet:
         specifier: ^3.3.0
         version: 3.3.0

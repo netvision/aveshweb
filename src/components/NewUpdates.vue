@@ -94,6 +94,7 @@ onMounted(async () => {
     width="800"
   >
     <el-upload
+        :headers="{ Authorization: `Bearer ${localStorage.getItem('aveshToken')}` }"
       v-model:file-list="images"
       class="upload-demo"
       action="https://avesh.netserve.in/new-update/up"

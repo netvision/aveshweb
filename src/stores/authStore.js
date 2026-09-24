@@ -1,82 +1,62 @@
 /* eslint-disable no-alert */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { defineStore } from 'pinia'
-import { GoogleAuthProvider, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, signOut, updatePassword } from 'firebase/auth'
 import axios from 'axios'
+import { defineStore } from 'pinia'
+
+const API = 'https://avesh.netserve.in'
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    isLoggedIn: true,
+    isLoggedIn: Boolean(localStorage.getItem('aveshToken')),
     name: '',
-    email: '',
+    email: localStorage.getItem('aveshEmail') || '',
     uid: '',
     photoURL: '',
   }),
   getters: {
     member: async (state) => {
-      const user = await axios.get(`https://avesh.netserve.in/members?filter[email][eq]=${state.email}`).then(res => res.data)
-      return user[0]
+      if (!state.email)
+        return null
+      const user = await axios.get(`${API}/members?filter[email][eq]=${encodeURIComponent(state.email)}`)
+      return user.data[0] || null
     },
   },
   actions: {
-    signIn(email, password) {
-      const auth = getAuth()
-      signInWithEmailAndPassword(auth, email, password).then((result) => {
-        const user = result.user
+    async signIn(email, password) {
+      try {
+        const { data } = await axios.post(`${API}/auth/login`, { email, password })
+        localStorage.setItem('aveshToken', data.access_token)
+        localStorage.setItem('aveshEmail', data.user.email)
+        this.isLoggedIn = true
+        this.email = data.user.email
+        this.uid = String(data.user.id)
+        this.name = data.user.email
         this.$router.push('/')
-      }).catch((error) => {
-        const errorCode = error.code
-        this.errorMessage = error.message
-        alert(this.errorMessage)
-      })
+      }
+      catch (error) {
+        this.isLoggedIn = false
+        alert(error.response?.data?.detail || 'Unable to sign in')
+      }
     },
     signInGoogle() {
-      const auth = getAuth()
-      const provider = new GoogleAuthProvider()
-      signInWithPopup(auth, provider)
-        .then((result) => {
-          const user = result.user
-          this.$router.push('/')
-        })
-        .catch((error) => {
-          const errorCode = error.code
-          this.errorMessage = error.message
-          alert(this.errorMessage)
-        })
+      alert('Google sign-in has been replaced with the Avesh API login.')
     },
-
     signout() {
-      const auth = getAuth()
-      signOut(auth)
-        .then(() => {
-          alert('logged out')
-          this.$router.push('/login')
-        })
-        .catch((error) => {
-          const errorCode = error.code
-          this.errorMessage = error.message
-          alert(this.errorMessage)
-        })
+      localStorage.removeItem('aveshToken')
+      localStorage.removeItem('aveshEmail')
+      this.isLoggedIn = false
+      this.email = ''
+      this.uid = ''
+      this.$router.push('/login')
     },
-
-    changePassword(password) {
-      const auth = getAuth()
-      const user = auth.currentUser
-      updatePassword(user, password).then(() => {
-        signOut(auth)
-          .then(() => {
-            alert('Password Changed! Please login again...')
-            this.$router.push('/login')
-          })
-          .catch((error) => {
-            const errorCode = error.code
-            this.errorMessage = error.message
-            alert(this.errorMessage)
-          })
-      }).catch((error) => {
-        const errorCode = error.code
-        this.errorMessage = error.message
-        alert(this.errorMessage)
-      })
+    async changePassword(currentPassword, newPassword) {
+      try {
+        await axios.put(`${API}/auth/change-password`, { current_password: currentPassword, new_password: newPassword })
+        alert('Password changed. Please log in again.')
+        this.signout()
+      }
+      catch (error) {
+        alert(error.response?.data?.detail || 'Unable to change password')
+      }
     },
   },
 })

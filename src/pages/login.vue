@@ -6,16 +6,10 @@ const authStore = useAuthStore()
 const email = ref('')
 const password = ref('')
 
-const signInGoogle = () => {
-  authStore.signInGoogle()
-}
 const signIn = () => {
   authStore.signIn(email.value, password.value)
 }
 
-const signOut = () => {
-  authStore.signout()
-}
 </script>
 
 <template>
@@ -52,18 +46,4 @@ const signOut = () => {
       </div>
     </div>
   </div>
-  <button
-    v-if="!authStore.isLoggedIn"
-    class="m-3 text-sm btn"
-    @click="signInGoogle"
-  >
-    Log in with Google
-  </button>
-  <button
-    v-else
-    class="m-3 text-sm btn"
-    @click="signOut"
-  >
-    Log out
-  </button>
 </template>

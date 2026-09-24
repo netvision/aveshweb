@@ -6,7 +6,7 @@ const authStore = useAuthStore()
 const member = ref(authStore.member)
 const passwordModal = ref(false)
 const formRef = ref()
-const pd = ref({})
+const pd = ref({ current_password: '', password: '', con_password: '' })
 const openPasswordModal = () => {
   passwordModal.value = true
 }
@@ -41,7 +41,7 @@ const rules = reactive({
 
 const update = () => {
   if (pd.value.password === pd.value.con_password)
-    authStore.changePassword(pd.value.password)
+    authStore.changePassword(pd.value.current_password, pd.value.password)
 }
 
 const logout = () => {
@@ -100,6 +100,11 @@ onMounted(async () => {
             >
               <el-form ref="formRef" :model="pd" label-width="120px" :rules="rules" status-icon label-position="top">
                 <el-row :gutter="20">
+                  <el-col :span="24">
+                    <el-form-item label="Current Password" prop="current_password">
+                      <el-input v-model="pd.current_password" type="password" />
+                    </el-form-item>
+                  </el-col>
                   <el-col :span="12">
                     <el-form-item label="Password" prop="password">
                       <el-input v-model="pd.password" type="password" />

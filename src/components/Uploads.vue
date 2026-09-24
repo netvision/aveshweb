@@ -87,6 +87,7 @@ onMounted(async () => {
     width="500"
   >
     <el-upload
+        :headers="{ Authorization: `Bearer ${localStorage.getItem('aveshToken')}` }"
       v-if="!newDoc.id"
       v-model:file-list="file"
       class="upload-demo"
