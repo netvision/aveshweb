@@ -65,7 +65,7 @@ onMounted(async () => {
             <div class="flex justify-center mt-6 lg:flex lg:mt-0 lg:-mx-2">
               <el-dropdown>
                 <span class="el-dropdown-link text-lg">
-                  {{ member.full_name }}
+                  {{ member?.full_name || 'Loading…' }}
                   <el-icon class="el-icon--right">
                     <arrow-down />
                   </el-icon>
@@ -73,12 +73,12 @@ onMounted(async () => {
                 <template #dropdown>
                   <el-dropdown-menu>
                     <el-dropdown-item>
-                      <router-link v-if="member.type === 0" to="/">
+                      <router-link v-if="member?.type === 0" to="/">
                         Admin Dashboard
                       </router-link>
                     </el-dropdown-item>
                     <el-dropdown-item>
-                      <router-link v-if="member.type === 0" to="/website">
+                      <router-link v-if="member?.type === 0" to="/website">
                         Manage website
                       </router-link>
                     </el-dropdown-item>

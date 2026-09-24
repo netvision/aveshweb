@@ -694,7 +694,7 @@ onMounted(async () => {
     <main v-else-if="member?.type === 2 || member?.type === 3" class="flex-1 bg-gray-100 p-4">
       <Retailer :member="member" />
     </main>
-    <aside v-if="member.type === 0" class="w-1/3 bg-gray-200 p-4">
+    <aside v-if="member?.type === 0" class="w-1/3 bg-gray-200 p-4">
       <NewUpdates />
       <Uploads />
       <Birthdays />
