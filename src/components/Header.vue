@@ -3,7 +3,7 @@
 import axios from 'axios'
 import { useAuthStore } from '~/stores/authStore'
 const authStore = useAuthStore()
-const member = ref(authStore.member)
+const member = ref(null)
 const passwordModal = ref(false)
 const formRef = ref()
 const pd = ref({ current_password: '', password: '', con_password: '' })
@@ -49,7 +49,7 @@ const logout = () => {
 }
 const isOpen = ref(false)
 onMounted(async () => {
-  member.value = await authStore.member
+  member.value = await authStore.loadMember()
 })
 </script>
 

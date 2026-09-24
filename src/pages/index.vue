@@ -17,19 +17,24 @@ const fileList = ref()
 
 const searchQ = ref('')
 const searchResult = ref([])
+let searchTimer
 
-const doSearch = async () => {
-  if (searchQ.value.length > 2) {
-    const data = await axios.get(`https://avesh.netserve.in/members?filter[full_name][like]=${searchQ.value}`).then(r => r.data)
-    const data1 = await axios.get(`https://avesh.netserve.in/members?filter[firm_title][like]=${searchQ.value}`).then(r => r.data)
-    const joined = data.concat(data1)
-    searchResult.value = joined.filter((item, index, self) =>
-      index === self.findIndex(t => t.id === item.id),
-    )
-  }
-  else {
-    searchResult.value = []
-  }
+const doSearch = () => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(async () => {
+    const query = searchQ.value.trim()
+    if (query.length <= 2) {
+      searchResult.value = []
+      return
+    }
+    const encoded = encodeURIComponent(query)
+    const [nameResult, firmResult] = await Promise.all([
+      axios.get(`https://avesh.netserve.in/members?filter[full_name][like]=${encoded}`),
+      axios.get(`https://avesh.netserve.in/members?filter[firm_title][like]=${encoded}`),
+    ])
+    const joined = nameResult.data.concat(firmResult.data)
+    searchResult.value = joined.filter((item, index, self) => index === self.findIndex(t => t.id === item.id))
+  }, 350)
 }
 
 const form = reactive({
@@ -261,7 +266,12 @@ const getData = async (row, treeNode, resolve) => {
 }
 
 onMounted(async () => {
-  const dist = await axios.get('https://avesh.netserve.in/members?filter[type][eq]=1&sort=-points_aggregate').then(res => res.data)
+  const [distResponse, electriciansResponse, currentMember] = await Promise.all([
+    axios.get('https://avesh.netserve.in/members?filter[type][eq]=1&sort=-points_aggregate'),
+    axios.get('https://avesh.netserve.in/members?filter[type][eq]=3&sort=-points_aggregate'),
+    authStore.loadMember(),
+  ])
+  const dist = distResponse.data
   distributors.value = dist.map(d => ({
     ...d,
     children: [],
@@ -274,8 +284,8 @@ onMounted(async () => {
       label: e.firm_title,
     })
   })
-  electricians.value = await axios.get('https://avesh.netserve.in/members?filter[type][eq]=3&sort=-points_aggregate').then(res => res.data)
-  member.value = await authStore.member
+  electricians.value = electriciansResponse.data
+  member.value = currentMember
 })
 </script>
 
