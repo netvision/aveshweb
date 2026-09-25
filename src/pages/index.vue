@@ -126,7 +126,6 @@ const rules = reactive({
 const saveForm = async () => {
   isDisabled.value = true
   if (form.password === form.con_password) {
-    const auth = getAuth()
     axios.post('https://avesh.netserve.in/members',
       {
         type: form.type,
@@ -139,16 +138,10 @@ const saveForm = async () => {
         aadhar: form.aadhar,
         full_address: form.address,
         city: form.city,
+        password: form.password,
       })
       .then((res) => {
-        if (createUserWithEmailAndPassword(auth, res.data.email, form.password)) {
-          alert('user member created successfully! please login once again')
-          authStore.signout()
-        }
-        else {
-          axios.delete(`https://avesh.netserve.in/members/${res.data.id}`)
-          alert('Couldnot create user! Please logout and login again and try')
-        }
+        alert('Member created successfully. They can now log in with their email/mobile and password.')
       })
       .catch((error) => {
         console.log(error.message)

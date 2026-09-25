@@ -3,11 +3,11 @@
 import { useAuthStore } from '~/stores/authStore'
 const router = useRouter()
 const authStore = useAuthStore()
-const email = ref('')
+const identifier = ref('')
 const password = ref('')
 
 const signIn = () => {
-  authStore.signIn(email.value, password.value)
+  authStore.signIn(identifier.value, password.value)
 }
 
 </script>
@@ -28,8 +28,8 @@ const signIn = () => {
           <div class="divide-y divide-gray-200">
             <div class="py-8 text-base leading-6 space-y-4 text-gray-700 sm:text-lg sm:leading-7">
               <div class="relative">
-                <input id="email" v-model="email" autocomplete="off" name="email" type="text" class="peer placeholder-transparent h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:borer-rose-600" placeholder="Email address">
-                <label for="email" class="absolute left-0 -top-3.5 text-gray-600 text-sm peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-440 peer-placeholder-shown:top-2 transition-all peer-focus:-top-3.5 peer-focus:text-gray-600 peer-focus:text-sm">Email Address</label>
+                <input id="identifier" v-model="identifier" autocomplete="username" name="identifier" type="text" class="peer placeholder-transparent h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:borer-rose-600" placeholder="Email or mobile number">
+                <label for="identifier" class="absolute left-0 -top-3.5 text-gray-600 text-sm peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-440 peer-placeholder-shown:top-2 transition-all peer-focus:-top-3.5 peer-focus:text-gray-600 peer-focus:text-sm">Email or mobile number</label>
               </div>
               <div class="relative">
                 <input id="password" v-model="password" autocomplete="off" name="password" type="password" class="peer placeholder-transparent h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:borer-rose-600" placeholder="Password">

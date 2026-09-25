@@ -18,13 +18,13 @@ export const useAuthStore = defineStore('auth', {
     member: state => state.currentMember,
   },
   actions: {
-    async signIn(email, password) {
+    async signIn(identifier, password) {
       try {
-        const { data } = await axios.post(`${API}/auth/login`, { email, password })
+        const { data } = await axios.post(`${API}/auth/login`, { identifier, password })
         localStorage.setItem('aveshToken', data.access_token)
-        localStorage.setItem('aveshEmail', data.user.email)
+        localStorage.setItem('aveshEmail', data.user.email || identifier)
         this.isLoggedIn = true
-        this.email = data.user.email
+        this.email = data.user.email || identifier
         this.uid = String(data.user.id)
         this.name = data.user.email
         this.currentMember = null
