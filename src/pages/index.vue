@@ -157,18 +157,24 @@ const userInfo = ref({})
 const editMemberModal = ref(false)
 const editFormRef = ref()
 const edit = ref({})
+const editPassword = ref('')
 const openEditModal = (member) => {
   edit.value = member
+  editPassword.value = ''
   editMemberModal.value = true
 }
 const closeEditModal = () => {
   edit.value = {}
+  editPassword.value = ''
   editMemberModal.value = false
 }
 const editMember = async () => {
   isDisabled.value = true
   if (edit.value.id) {
-    const res = await axios.put(`https://avesh.netserve.in/members/${edit.value.id}`, edit.value)
+    const payload = { ...edit.value }
+    if (editPassword.value.trim())
+      payload.password = editPassword.value
+    const res = await axios.put(`https://avesh.netserve.in/members/${edit.value.id}`, payload)
     console.log(res.status)
     editMemberModal.value = false
     location.reload()
@@ -562,6 +568,9 @@ onMounted(async () => {
           </el-form-item>
           <el-form-item label="City/Town">
             <el-input v-model="edit.city" type="text" />
+          </el-form-item>
+          <el-form-item label="Set login password">
+            <el-input v-model="editPassword" type="password" show-password placeholder="Leave blank to keep current password" />
           </el-form-item>
         </el-form>
         <template #footer>
