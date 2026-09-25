@@ -65,7 +65,10 @@ export const useAuthStore = defineStore('auth', {
     },
     async changePassword(currentPassword, newPassword) {
       try {
-        await axios.put(`${API}/auth/change-password`, { current_password: currentPassword, new_password: newPassword })
+        const endpoint = this.currentMember && this.currentMember.type !== 0
+          ? `${API}/auth/member/change-password`
+          : `${API}/auth/change-password`
+        await axios.put(endpoint, { current_password: currentPassword, new_password: newPassword })
         alert('Password changed. Please log in again.')
         this.signout()
       }
