@@ -219,46 +219,46 @@ const closePointsModal = () => {
   points.value = {}
 }
 const savePoints = async () => {
-  points.value.ref_id = crypto.randomUUID()
   isDisabled.value = true
-  const promises = []
-  if (points.value.type === 'c') {
-    if (userInfo.value.type === 2) {
-      const dist = distributors.value.filter(d => d.id === userInfo.value.distributor_id)[0]
-      dist.points_available = dist.points_available - Number(points.value.point)
-      const new_point = points.value
-      promises.push(axios.put(`https://avesh.netserve.in/members/${dist.id}`, dist))
-      new_point.type = 'r'
-      new_point.member_id = dist.id
-      promises.push(axios.post('https://avesh.netserve.in/points', new_point))
+  try {
+    const point = Number(points.value.point)
+    const base = {
+      points: point,
+      reference_id: crypto.randomUUID(),
+      invoice_no: points.value.invoice_no || null,
+      invoice_date: points.value.invoice_date || points.value.date || null,
+      invoice_amount: points.value.invoice_amount ? Number(points.value.invoice_amount) : null,
+      notes: points.value.other_info || null,
     }
-
-    const userData = { points_aggregate: userInfo.value.points_aggregate + Number(points.value.point), points_available: userInfo.value.points_available + Number(points.value.point) }
-    promises.push(axios.patch(`https://avesh.netserve.in/members/${userInfo.value.id}`, userData))
-    const rPoint = points.value
-    rPoint.member_id = userInfo.value.id
-    rPoint.type = 'c'
-    promises.push(axios.post('https://avesh.netserve.in/points', rPoint))
-  }
-  else if (points.value.type === 'd') {
-    const userData = { points_aggregate: userInfo.value.points_aggregate - Number(points.value.point) }
-    promises.push(axios.patch(`https://avesh.netserve.in/members/${userInfo.value.id}`, userData))
-    const rPoint = points.value
-    rPoint.member_id = userInfo.value.id
-    promises.push(axios.post('https://avesh.netserve.in/points', rPoint))
-  }
-  else {
-    const userData = { points_aggregate: userInfo.value.points_aggregate + Number(points.value.point) }
-    promises.push(axios.patch(`https://avesh.netserve.in/members/${userInfo.value.id}`, userData))
-    const bPoint = points.value
-    bPoint.member_id = userInfo.value.id
-    promises.push(axios.post('https://avesh.netserve.in/points', bPoint))
-  }
-  const res = await Promise.allSettled(promises)
-  pointsModal.value = false
-  setTimeout(() => {
+    let payload
+    if (points.value.type === 'd') {
+      payload = { ...base, kind: 'gift_redemption', member_id: userInfo.value.id }
+    }
+    else if (points.value.type === 'b') {
+      payload = { ...base, kind: 'bonus', member_id: userInfo.value.id }
+    }
+    else if (userInfo.value.type === 2) {
+      const distributor = distributors.value.find(d => d.id === userInfo.value.distributor_id)
+      if (!distributor)
+        throw new Error('The retailer has no valid distributor')
+      payload = { ...base, kind: 'retailer_purchase', distributor_id: distributor.id, retailer_id: userInfo.value.id }
+    }
+    else if (userInfo.value.type === 1) {
+      payload = { ...base, kind: 'distributor_purchase', member_id: userInfo.value.id }
+    }
+    else {
+      payload = { ...base, kind: 'bonus', member_id: userInfo.value.id }
+    }
+    await axios.post('https://avesh.netserve.in/point-transactions', payload)
+    pointsModal.value = false
     location.reload()
-  }, 3000)
+  }
+  catch (error) {
+    alert(error.response?.data?.detail || error.message || 'Unable to save points transaction')
+  }
+  finally {
+    isDisabled.value = false
+  }
 }
 
 const getData = async (row, treeNode, resolve) => {
