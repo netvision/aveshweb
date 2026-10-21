@@ -3,6 +3,7 @@
 <script setup>
 import axios from 'axios'
 import { Delete, DocumentAdd, Plus } from '@element-plus/icons-vue'
+const uploadHeaders = computed(() => ({ Authorization: `Bearer ${localStorage.getItem('aveshToken') || ''}` }))
 const docs = ref()
 const docModal = ref(false)
 const newDoc = ref({})
@@ -87,7 +88,7 @@ onMounted(async () => {
     width="500"
   >
     <el-upload
-        :headers="{ Authorization: `Bearer ${localStorage.getItem('aveshToken')}` }"
+        :headers="uploadHeaders"
       v-if="!newDoc.id"
       v-model:file-list="file"
       class="upload-demo"

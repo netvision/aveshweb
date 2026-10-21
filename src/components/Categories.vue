@@ -4,6 +4,7 @@
 <script setup>
 import axios from 'axios'
 import { Delete, EditPen, Plus } from '@element-plus/icons-vue'
+const uploadHeaders = computed(() => ({ Authorization: `Bearer ${localStorage.getItem('aveshToken') || ''}` }))
 
 const activeCatId = ref(1)
 const cats = ref([])
@@ -133,7 +134,7 @@ onMounted(async () => {
   >
     <el-form label-position="top" label-width="auto" :model="activeCat">
       <el-upload
-        :headers="{ Authorization: `Bearer ${localStorage.getItem('aveshToken')}` }"
+        :headers="uploadHeaders"
         class="avatar-uploader"
         action="https://avesh.netserve.in/cat/upload"
         :show-file-list="false"
@@ -199,7 +200,7 @@ onMounted(async () => {
         <el-input v-model="activeProduct.description" type="textarea" />
       </el-form-item>
       <el-upload
-        :headers="{ Authorization: `Bearer ${localStorage.getItem('aveshToken')}` }"
+        :headers="uploadHeaders"
         v-model:file-list="imgs"
         class="upload-demo"
         action="https://avesh.netserve.in/product/upload"

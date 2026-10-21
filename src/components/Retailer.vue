@@ -3,6 +3,7 @@
 <script setup>
 import axios from 'axios'
 import { DocumentCopy, Edit } from '@element-plus/icons-vue'
+const uploadHeaders = computed(() => ({ Authorization: `Bearer ${localStorage.getItem('aveshToken') || ''}` }))
 const props = defineProps(['member'])
 const member = ref(props.member)
 const profilePic = ref(`https://avesh.netserve.in/profile-photos/member-${member.value.id}.jpg?timestamp=${new Date().getTime()}`)
@@ -73,7 +74,7 @@ onMounted(async () => {
   <div class="md:flex items-stretch gap-2">
     <div class="w-full md:w-1/5 px-10">
       <el-upload
-        :headers="{ Authorization: `Bearer ${localStorage.getItem('aveshToken')}` }"
+        :headers="uploadHeaders"
         class="avatar-uploader"
         :data="{ member_id: member.id }"
         action="https://avesh.netserve.in/member/photo"

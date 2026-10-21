@@ -3,6 +3,7 @@
 <script setup>
 import axios from 'axios'
 import { Delete, Plus } from '@element-plus/icons-vue'
+const uploadHeaders = computed(() => ({ Authorization: `Bearer ${localStorage.getItem('aveshToken') || ''}` }))
 const docModal = ref(false)
 const newUpdate = ref({})
 const visibility = ref()
@@ -94,7 +95,7 @@ onMounted(async () => {
     width="800"
   >
     <el-upload
-        :headers="{ Authorization: `Bearer ${localStorage.getItem('aveshToken')}` }"
+        :headers="uploadHeaders"
       v-model:file-list="images"
       class="upload-demo"
       action="https://avesh.netserve.in/new-update/up"
